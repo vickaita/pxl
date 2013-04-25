@@ -13,9 +13,7 @@
      [:div#ui
       [:header#logo [:h1 "pxl"]]
       [:hr]
-      [:div#image-sources
-       [:div#file-picker
-        [:input#file-picker-input {:type "file"}]]
-       [:ul#source-list]]]
-     [:layers
-      [:canvas.layer#main-canvas]]])) 
+      [:input#file-picker-input {:type "file"}]
+      [:select#tools
+       [:option "-- Tools --"]]]
+     [:canvas#main-canvas ""]]))

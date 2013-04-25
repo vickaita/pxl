@@ -1,97 +1,75 @@
 (ns vickaita.pxl.core
-  (:require [goog.dom :as dom]
+  (:require [domina :as dom]
+            [domina.events :as evt]
             [goog.dom.ViewportSizeMonitor]
-            [goog.events :as events]
             [clojure.browser.repl :as repl]
-            [vickaita.pxl.app :as app]
-            [vickaita.raster.core :refer [put-image image-data]]))
+            [vickaita.pxl.render :as render]
+            [vickaita.pxl.image-node :refer [image-node]]
+            [vickaita.raster.core :as ras]
+            [vickaita.raster.filters :as filt]))  
 
-(def main-canvas (atom nil))
+;; Model
 
-(def image-list (atom ()))
+(def ^{:doc "Holds the image-data for the currently displayed image."}
+  current-image (atom nil))
 
-(def canvas-size (atom {:width 0 :height 0}))
+(def ^{:doc "The graph holding all mutations on the images."}
+  image-graph (atom #{}))
 
-(def image-offset (atom {:x 0 :y 0}))
+(def tool-list
+  (sorted-map
+    "Invert" filt/invert
+    "Blur" filt/blur
+    "Desaturate" filt/desaturate))
 
-(def images (atom {}))
+;; View
 
-(defn add-image
-  [data-url])
-
-(defn- redraw-canvas
+(defn monitor-current-image
   []
-  (.log js/console "redraw")
-  (when (first @image-list)
-    (let [i (js/Image.)
-          ctx (.getContext @main-canvas "2d")
-          {sx :x sy :y} @image-offset
-          dx 0 dy 0
-          {dw :width dh :height} @canvas-size ]
-      (set! (.-onload i) #(.putImageData ctx (image-data i) sx sy dx dy dw dh))
-      (set! (.-src i) (first @image-list)))))
+  (add-watch current-image :on-change (fn [_ _ _ n]
+                                        (let [w (ras/width n)
+                                              h (ras/height n)]
+                                          (render/resize-main-canvas w h)
+                                          (render/redraw-main-canvas @current-image)))))
 
-(defn- resize-canvas
-  []
-  (doto @main-canvas
-    (.setAttribute "width" (:width @canvas-size))
-    (.setAttribute "height" (:height @canvas-size))))
+;; Controller
 
-(defn monitor-image-list
-  []
-  (add-watch image-list :redraw-canvas redraw-canvas)
-  (add-watch image-offset :image-offset redraw-canvas) 
-  (add-watch canvas-size :resize-canvas #(do (resize-canvas)
-                                             (redraw-canvas))))
+(defn load-image-from-file
+  [file]
+  (let [img (js/Image.)]
+    (set! (.-onload img) #(let [node (image-node (ras/image-data img))]
+                            (swap! image-graph conj node)
+                            (reset! current-image (:data node))
+                            (set! (.-onload img) nil)))
+    (set! (.-src img) (js/URL.createObjectURL file))))
 
-(defn monitor-viewport-size
+(defn monitor-loader
   []
-  (let [vsm (goog.dom.ViewportSizeMonitor.)]
-    (let [size (.getSize vsm)]
-      (reset! canvas-size {:width (.-width size) :height (.-height size)}))
-    (events/listen
-      vsm goog.events.EventType.RESIZE
-      #(let [size (.getSize vsm)]
-         (reset! canvas-size {:width (.-width size) :height (.-height size)})))))
+  (let [fp-input (dom/by-id "file-picker-input")]
+    (evt/listen! fp-input "change"
+                    #_(load-image-from-file (aget (.-files fp-input) 0))
+                    #(load-image-from-file (aget fp-input "files" 0)))))
 
-(defn monitor-load-image
+(defn monitor-tools
   []
-  (let [fp-input (dom/getElement "file-picker-input")]
-    (events/listen
-      fp-input "change"
-      #(let [file (aget (.-files fp-input) 0) ]
-         (swap! image-list conj (js/URL.createObjectURL file))))))
+  (evt/listen! (dom/by-id "tools")
+               :change (fn [e]
+                         (when-let [op-name (.-value (evt/current-target e))]
+                           (swap! current-image (tool-list op-name))))))
 
 (defn monitor-keys
   []
-  (events/listen js/document "keydown" #(.log js/console "keydown"))
-  (events/listen js/document "keyup" #(.log js/console "keyup"))) 
-
-(defn handle-move-canvas
-  []
-  (events/listen
-    @main-canvas "mousedown"
-    (fn [e]
-      (.log js/console "mousedown")
-      (let [x (.-clientX e)
-            y (.-clientY e)
-            mv-key (events/listen
-                     @main-canvas "mousemove"
-                     #(reset! image-offset {:x (- (.-clientX %) x)
-                                            :y (- (.-clientY %) y)}))]
-        (events/listenOnce
-          @main-canvas "mouseup"
-          #(events/unlistenByKey mv-key))))))
+  (evt/listen! :keydown #(.log js/console "keydown"))
+  (evt/listen! :keyup #(.log js/console "keyup")))
 
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (reset! main-canvas (dom/getElement "main-canvas"))
-  (monitor-image-list)
-  (monitor-viewport-size)
-  (monitor-load-image)
-  #_(monitor-keys)
-  (handle-move-canvas))
+  (render/prepare-tools tool-list)
+  (monitor-current-image)
+  (monitor-loader)
+  (monitor-tools)
+  #_(monitor-keys))
 
 ;; Kickoff the main function once the page loads
-(events/listen js/document "DOMContentLoaded" main)
+(evt/listen! js/document "DOMContentLoaded" main)
