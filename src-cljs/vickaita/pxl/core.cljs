@@ -24,13 +24,10 @@
 
 ;; View
 
-(defn monitor-current-image
+(defn monitor-models
   []
-  (add-watch current-image :on-change (fn [_ _ _ n]
-                                        (let [w (ras/width n)
-                                              h (ras/height n)]
-                                          (render/resize-main-canvas w h)
-                                          (render/redraw-main-canvas @current-image)))))
+  (add-watch current-image :image-change render/handle-image-change)
+  (add-watch image-graph :graph-change render/handle-graph-change))
 
 ;; Controller
 
@@ -66,7 +63,7 @@
   []
   (repl/connect "http://localhost:9201/repl")
   (render/prepare-tools tool-list)
-  (monitor-current-image)
+  (monitor-models)
   (monitor-loader)
   (monitor-tools)
   #_(monitor-keys))
