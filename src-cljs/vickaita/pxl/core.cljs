@@ -5,7 +5,7 @@
             [clojure.browser.repl :as repl]
             [vickaita.pxl.render :as render]
             [vickaita.pxl.image-node :refer [image-node]]
-            [vickaita.raster.core :as ras]
+            [vickaita.raster.core :as ras :refer [image-data]]
             [vickaita.raster.filters :as filt]))  
 
 ;; Model
@@ -15,6 +15,10 @@
 
 (def ^{:doc "The graph holding all mutations on the images."}
   image-graph (atom #{}))
+
+#_(def ^{:doc "The graph holding all mutations on the images."}
+  image-graph (atom {:heads #{}
+                     :current nil}))
 
 (def tool-list
   (sorted-map
@@ -33,18 +37,18 @@
 
 (defn load-image-from-file
   [file]
-  (let [img (js/Image.)]
-    (set! (.-onload img) #(let [node (image-node (ras/image-data img))]
-                            (swap! image-graph conj node)
-                            (reset! current-image (:data node))
-                            (set! (.-onload img) nil)))
-    (set! (.-src img) (js/URL.createObjectURL file))))
+  (when file
+    (let [img (js/Image.)]
+      (set! (.-onload img) #(let [node (image-node (image-data img))]
+                              (swap! image-graph conj node)
+                              (reset! current-image node)
+                              (set! (.-onload img) nil)))
+      (set! (.-src img) (js/URL.createObjectURL file)))))
 
 (defn monitor-loader
   []
   (let [fp-input (dom/by-id "file-picker-input")]
     (evt/listen! fp-input "change"
-                    #_(load-image-from-file (aget (.-files fp-input) 0))
                     #(load-image-from-file (aget fp-input "files" 0)))))
 
 (defn monitor-tools
@@ -52,7 +56,11 @@
   (evt/listen! (dom/by-id "tools")
                :change (fn [e]
                          (when-let [op-name (.-value (evt/current-target e))]
-                           (swap! current-image (tool-list op-name))))))
+                           (let [operation (tool-list op-name)
+                                 old-image (:data @current-image)
+                                 new-image (image-node (operation old-image) old-image)]
+                             (reset! current-image new-image)
+                             (swap! image-graph conj new-image))))))
 
 (defn monitor-keys
   []

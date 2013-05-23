@@ -1,11 +1,33 @@
 (ns vickaita.raster.core
-  (:require [vickaita.raster.geometry :refer [surround normalize-matrix
-                                              pixel-groups convolution-table]]
+  (:require [vickaita.raster.geometry :as geo]
             [goog.dom :as dom]))
 
-(declare image-data)
+;; Provides a protocol for accessing dimensions and pixel data of an image.
+(defprotocol ImageData
+  (width [this] "Returns the width of the ImageData.")
+  (height [this] "Returns the height of the ImageData.")
+  (data [this] "Returns the data of the ImageData."))
+
+;; Provides a protocol for accessing ImageData of various HTML Elements as well
+;; as some objects.
+(defprotocol Imageable
+  (-image-data [this] "Returns a js/ImageData object."))
+
+;; A protocol for accessing the color channels from a pixel.
+(defprotocol Pixel
+  (red [pixel] "The red component of the pixel.")
+  (green [pixel] "The green component of the pixel.")
+  (blue [pixel] "The blue component of the pixel.")
+  (alpha [pixel] "The alpha component of the pixel."))
+
+(defprotocol Renderable
+  (render [this target] "Paints this on the canvas."))
+
+;; Constants
 
 (def empty-pixel [0 0 0 0])
+
+;; Utility functions
 
 (defn pixel-array
   "Convert data into a Uint8ClampedArray."
@@ -33,19 +55,6 @@
   ([canvas] (.getContext canvas "2d"))
   ([w h] (get-context (make-canvas w h))))
 
-(defn put-image
-  "Draws an image-data onto a canvas."
-  [cnv img]
-  (let [i (image-data img)]
-    (.putImageData (get-context cnv) i 0 0)))
-
-;; IImageData Protocol
-;; Provides a protocol for accessing ImageData of various HTML Elements as well
-;; as some objects.
-
-(defprotocol IImageData
-  (-image-data [this] "Returns a js/ImageData object."))
-
 (defn image-data
   "Returns a js/ImageData object from the provided object. If width and height
   are provided then a blank ImageData will be returned with the corresponding
@@ -54,7 +63,47 @@
   ([w h] (-image-data (make-canvas w h)))
   ([w h d] (-image-data {:width w :height h :data d})))
 
-(extend-protocol IImageData
+(defn put-image
+  "Draws an image-data onto a canvas."
+  ([cnv img]
+   (let [i (image-data img)]
+     (.putImageData (get-context cnv) i 0 0)))
+  ([cnv img sx sy sw sh dx dy dw dh]
+   (.putImageData (get-context cnv)
+                  (image-data img)
+                  sx sy sw sh dx dy dw dh)))
+
+
+;; Protocol Implementations
+
+(extend-protocol ImageData
+  js/ImageData
+  (width [this] (.-width this))
+  (height [this] (.-height this))
+  (data [this] (.-data this))
+
+  js/Image
+  (width [this] (.-width this))
+  (height [this] (.-height this))
+  (data [this]
+    (let [w (width this)
+          h (height this)
+          ctx (get-context w h)]
+      (.drawImage ctx this 0 0 w h)
+      (.-data (.getImageData ctx 0 0 w h))))
+
+  cljs.core/ObjMap
+  (width [this] (get this :width 0))
+  (height [this] (get this :height 0))
+  (data [this] (get this :data (js/Uint8ClampedArray.)))
+
+  nil
+  (width [_] 0)
+  (height [_] 0)
+  (data [_] (js/Uint8ClampedArray.))
+  )
+
+(extend-protocol Imageable
   js/ImageData
   (-image-data [this] this)
 
@@ -89,25 +138,14 @@
   (-image-data [{:keys [width height data]}]
     (when (and width height data)
       (let [blank (image-data width height)]
-        (.set (.-data blank) (pixel-array data)
-              #_(if (= js/Uint8ClampedArray (type data))
-                               data
-                               (js/Uint8ClampedArray.
-                                 (into-array (if) data))))
+        (.set (.-data blank) (pixel-array data))
         blank)))
 
+  nil
+  (-image-data [_] (-image-data {:width 0 :height 0 :data []}))
   )
 
-;; IPixel Protocol
-;; A protocol for accessing the color channels from a pixel.
-
-(defprotocol IPixel
-  (red [pixel] "The red component of the pixel.")
-  (green [pixel] "The green component of the pixel.")
-  (blue [pixel] "The blue component of the pixel.")
-  (alpha [pixel] "The alpha component of the pixel."))
-
-(extend-protocol IPixel
+(extend-protocol Pixel
   js/Array
   js/Uint8ClampedArray
   (red [a] (aget a 0))
@@ -120,14 +158,6 @@
   (green [a] (nth a 1))
   (blue [a] (nth a 2))
   (alpha [a] (nth a 3)))
-
-;; IBitmap Protocol
-;; Provides a protocol for accessing dimensions and pixel data of an image.
-
-(defprotocol IBitmap
-  (width [bitmap] "The width of the bitmap in pixels.")
-  (height [bitmap] "The height of the bitmap in pixels.")
-  (data [bitmap] "The pixel data of the image." ))
 
 ;; ImageDataSeq
 ;; Allows seq functions to be called on an ImageData.
@@ -142,13 +172,13 @@
   ;(-pr-writer [coll writer opts]
   ;  (pr-sequential-writer writer pr-writer "(" " " ")" opts coll))
 
-  IPixel
+  Pixel
   (red [_] (aget arr (* 4 i)))
   (green [_] (aget arr (+ 1 (* 4 i))))
   (blue [_] (aget arr (+ 2 (* 4 i))))
   (alpha [_] (aget arr (+ 3 (* 4 i))))
 
-  IBitmap
+  ImageData
   (width [_] w)
   (height [_] h)
   (data [_] arr)
@@ -217,13 +247,7 @@
 ;; ImageData
 ;; Extend the native ImageData type with ClojureScript protocols so that it can
 ;; be operated on with standard collection functions.
-
 (extend-type js/ImageData
-
-  IBitmap
-  (width [img] (.-width img))
-  (height [img] (.-height img))
-  (data [img] (.-data img))
 
   ICounted
   (-count [coll] (* (.-width coll) (.-height coll)))
@@ -270,7 +294,7 @@
 
 )
 
-(defn convolute
+(defn convolve
   "Apply a convolution matrix to an image.
 
   The matrix should be a square and it should have an odd route (e.g. 9 and 25
@@ -285,7 +309,7 @@
         sdata (data src-img)
         dimg (image-data w h)
         ddata (data dimg)
-        ct (convolution-table matrix)
+        ct (geo/convolution-table matrix)
         ct-iterations (/ (count ct) 6)]
     (dotimes [dy h]
       (dotimes [dx w]
@@ -322,3 +346,29 @@
           (aset ddata bd (+ offset (aget ddata bd)))
           (aset ddata ad (+ offset (aget ddata ad))))))
     dimg))
+
+(defn crop
+  [img x y w h]
+  (let [cnv (make-canvas w h)]
+    (put-image cnv img
+               x y (+ x w) (+ y h)
+               0 0      w       h)
+    (image-data cnv)))
+
+(defn scale
+  [img w h]
+  ;; TODO try to get rid of these null checks with polymorphism
+  (if (and (not (nil? img)) (> 0 w) (> 0 h))
+    (let [cnv (make-canvas w h)]
+      (put-image cnv img 0 0 (width img) (height img) 0 0 w h)
+      (image-data cnv))
+    img))
+
+(defn image-data->url
+  [img]
+  ;; TODO try to get rid of these null checks with polymorphism
+  (if (nil? img)
+    "data:image/png;base64,"
+    (let [can (make-canvas (width img) (height img))]
+      (put-image can img)
+      (.toDataURL can))))

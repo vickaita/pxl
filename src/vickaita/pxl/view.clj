@@ -15,5 +15,9 @@
       [:hr]
       [:input#file-picker-input {:type "file"}]
       [:select#tools
-       [:option "-- Tools --"]]]
+       [:option "-- Tools --"]]
+      [:table
+       [:thead [:tr [:th "Parent"] [:th "Data"]]]
+       [:tfoot]
+       [:tbody#graph]]]
      [:canvas#main-canvas ""]]))
