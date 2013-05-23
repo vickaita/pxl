@@ -48,15 +48,11 @@
   (let [graph (dom/by-id "graph")]
     (dom/destroy-children! graph)
     (doseq [node nodes]
-      (let [p (.createElement js/document "img")
-            d (.createElement js/document "img")]
-        (.setAttribute p "src" (thumb (:parent node)))
-        (dom/append! graph
-                     (dom/html-to-dom
-                       (str "<tr>"
-                            "<th>" (thumb (:parent node)) "</th>"
-                            "<th>" (get node :data "no data") "</th>"
-                            "</tr>")))))))
+      (let [p (thumb (:parent node))
+            n (thumb (:image-data node))
+            d (.createElement js/document "div")]
+      (dom/append! d [p n])
+      (dom/append! graph d)))))
 
 ;; Event handlers
 

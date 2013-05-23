@@ -57,7 +57,7 @@
                :change (fn [e]
                          (when-let [op-name (.-value (evt/current-target e))]
                            (let [operation (tool-list op-name)
-                                 old-image (:data @current-image)
+                                 old-image (:image-data @current-image)
                                  new-image (image-node (operation old-image) old-image)]
                              (reset! current-image new-image)
                              (swap! image-graph conj new-image))))))
