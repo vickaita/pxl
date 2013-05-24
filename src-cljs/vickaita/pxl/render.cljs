@@ -57,9 +57,9 @@
   [nodes]
   (let [graph (dom/by-id "graph")]
     (dom/destroy-children! graph)
-    (doseq [node nodes]
-      (let [p (thumb (:parent node))
-            n (thumb (:image-data node))
+    (doseq [node (vals nodes)]
+      (let [p (thumb (get nodes (:parent node)))
+            n (thumb node)
             d (.createElement js/document "div")]
       (dom/append! d [p n])
       (dom/append! graph d)))))
