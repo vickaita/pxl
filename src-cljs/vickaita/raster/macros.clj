@@ -17,7 +17,7 @@
            src-data# (vickaita.raster.core/data ~src-img)
            dst-img# (vickaita.raster.core/image-data w# h#)
            dst-data# (vickaita.raster.core/data dst-img#)
-           n# (dec (* 4 (count ~src-img)))]
+           n# (alength dst-data#)]
        (loop [r# 0 g# 1 b# 2 a# 3]
          (let [~(nth form 0) (aget src-data# r#)
                ~(nth form 1) (aget src-data# g#)
@@ -28,6 +28,6 @@
            (aset dst-data# g# ~(nth body 1))
            (aset dst-data# b# ~(nth body 2))
            (aset dst-data# a# ~(nth body 3)))
-         (when (< a# n#)
+         (when (> n# a#)
            (recur (+ 4 r#) (+ 4 g#) (+ 4 b#) (+ 4 a#))))
        dst-img#)))
