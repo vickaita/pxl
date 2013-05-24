@@ -3,6 +3,16 @@
             [domina.events :as evt]
             [vickaita.raster.core :as ras :refer [width height put-image]]))
 
+(defn benchmark
+  [f k]
+  (fn [& args]
+    (let [start (.now js/Date)
+          result (apply f args)
+          end (.now js/Date)
+          delta (- end start)]
+      (.log js/console (str "Method " k "took " delta "ms to complete."))
+      result)))
+
 ;; Initialization
 
 (defn prepare-tools
@@ -57,12 +67,10 @@
 ;; Event handlers
 
 (defn handle-image-change
-  [_ _ _ n]
-  (when-let [new-image (:data n)]
-    (let [w (width new-image)
-          h (height new-image)]
-      (resize-main-canvas w h)
-      (redraw-main-canvas new-image))))
+  [_ _ _ node]
+  (when node
+    (resize-main-canvas (width node) (height node))
+    (redraw-main-canvas node)))
 
 (defn handle-graph-change
   [_ _ _ nodes]
