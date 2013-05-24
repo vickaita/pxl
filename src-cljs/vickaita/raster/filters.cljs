@@ -19,9 +19,3 @@
   (c/convolve [0 1 0
                1 1 1
                0 1 0] 5 0 img))
-
-#_(defn blur
-    [img]
-    (c/convolve [[0 1 0]
-                 [1 1 1]
-                 [0 1 0]] 5 0 img))
