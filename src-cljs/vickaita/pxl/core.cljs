@@ -14,10 +14,11 @@
   current-image (atom nil))
 
 (def ^{:doc "The graph holding all mutations on the images."}
-  image-graph (atom #{}))
+  image-graph (atom {}))
 
 #_(def ^{:doc "The graph holding all mutations on the images."}
   image-graph (atom {:heads #{}
+                     :nodes {}
                      :current nil}))
 
 (def tool-list
@@ -40,41 +41,34 @@
   (when file
     (let [img (js/Image.)]
       (set! (.-onload img) #(let [node (image-node (image-data img))]
-                              (swap! image-graph conj node)
+                              (swap! image-graph assoc (:id node) node)
                               (reset! current-image node)
                               (set! (.-onload img) nil)))
       (set! (.-src img) (js/URL.createObjectURL file)))))
 
-(defn monitor-loader
+(defn apply-tool
+  [e]
+  (when-let [op-name (.-value (evt/current-target e))]
+    (when-let [operation (tool-list op-name)]
+      (let [new-image (image-node (operation @current-image) @current-image)]
+        (reset! current-image new-image)
+        (swap! image-graph assoc (:id new-image) new-image)))))
+
+(defn monitor-dom
   []
   (let [fp-input (dom/by-id "file-picker-input")]
     (evt/listen! fp-input "change"
-                    #(load-image-from-file (aget fp-input "files" 0)))))
-
-(defn monitor-tools
-  []
-  (evt/listen! (dom/by-id "tools")
-               :change (fn [e]
-                         (when-let [op-name (.-value (evt/current-target e))]
-                           (let [operation (tool-list op-name)
-                                 old-image (:image-data @current-image)
-                                 new-image (image-node (operation old-image) old-image)]
-                             (reset! current-image new-image)
-                             (swap! image-graph conj new-image))))))
-
-(defn monitor-keys
-  []
-  (evt/listen! :keydown #(.log js/console "keydown"))
-  (evt/listen! :keyup #(.log js/console "keyup")))
+                 #(load-image-from-file (aget fp-input "files" 0)))) 
+  (evt/listen! (dom/by-id "tools") :change apply-tool) 
+  #_(evt/listen! :keydown #(.log js/console "keydown"))
+  #_(evt/listen! :keyup #(.log js/console "keyup")))
 
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
   (render/prepare-tools tool-list)
   (monitor-models)
-  (monitor-loader)
-  (monitor-tools)
-  #_(monitor-keys))
+  (monitor-dom))
 
 ;; Kickoff the main function once the page loads
 (evt/listen! js/document "DOMContentLoaded" main)
