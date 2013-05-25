@@ -1,4 +1,4 @@
-(defproject raster "0.1.0-SNAPSHOT"
+(defproject raster "0.1.0"
   :description "A library for working with ImageData in ClojureScript."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
