@@ -315,6 +315,7 @@
       (dotimes [dx w]
         (let [dest (* 4 (+ dx (* w dy)))]
           (loop [p 0 r-acc 0 g-acc 0 b-acc 0 a-acc 0]
+            #_(when (= dy 5) (.log js/console p r-acc))
             (if (< p ct-count)
               (let [sx (+ dx (aget ct p))
                     sy (+ dy (aget ct (inc p)))]
@@ -333,6 +334,7 @@
                   (aset ddata (+ 1 dest) (+ offset (/ g-acc divisor)))
                   (aset ddata (+ 2 dest) (+ offset (/ b-acc divisor)))
                   (aset ddata (+ 3 dest) (+ offset (/ a-acc divisor)))))))))
+    (.log js/console dimg)
     dimg))
 
 (defn crop

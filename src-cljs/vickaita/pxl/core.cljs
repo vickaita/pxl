@@ -25,7 +25,9 @@
   (sorted-map
     "Invert" filt/invert
     "Blur" filt/blur
-    "Desaturate" filt/desaturate))
+    "Desaturate" filt/desaturate
+    "Sobel" filt/sobel
+    "Sharpen" filt/sharpen))
 
 ;; View
 

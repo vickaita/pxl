@@ -19,3 +19,31 @@
   (c/convolve [0 1 0
                1 1 1
                0 1 0] 5 0 img))
+
+(defn sobel
+  [img]
+  (->> img
+       (c/convolve [1 0 -1
+                    2 0 -2
+                    1 0 -1] 1 0)
+       (c/convolve [ 1  2  1
+                     0  0  0
+                    -1 -2 -1] 1 0)))
+
+(defn no-alpha
+  [matrix]
+  (let [center (Math/floor (/ (count matrix) 2))
+        v (matrix center)]
+    (assoc (vec (map #(vector % % % 0) matrix)) center [v v v 1])))
+
+(defn foo
+  [img]
+  (c/convolve (no-alpha [-1 -1 -1
+                         -1  8 -1
+                         -1 -1 -1]) 1 0 img))
+
+(defn sharpen
+  [img]
+  (c/convolve (no-alpha [1  1 1
+                         1 -7 1
+                         1  1 1]) 1 0 img))
