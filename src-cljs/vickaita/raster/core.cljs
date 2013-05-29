@@ -310,41 +310,31 @@
         dimg (image-data w h)
         ddata (data dimg)
         ct (geo/convolution-table matrix)
-        ct-iterations (/ (count ct) 6)]
+        ct-count (count ct)]
     (dotimes [dy h]
       (dotimes [dx w]
-        (let [doffset (* 4 (+ dx (* w dy)))
-              rd (+ 0 doffset)
-              gd (+ 1 doffset)
-              bd (+ 2 doffset)
-              ad (+ 3 doffset)]
-          (dotimes [i ct-iterations]
-            (let [p (* 6 i) ; p is an offset in the convolution table
-                  sx (+ dx (aget ct p))
-                  sy (+ dy (aget ct (inc p)))]
-              ; For some reason clojurescript insists on creating an anon fn
-              ; for the `and` block so inline the js for performance and
-              ; ^boolean type hint to prevent call to cljs.core.truth_.
-              (if ^boolean (js* "0 <= ~{} && ~{} < ~{} && 0 <= ~{} && ~{} < ~{}"
-                                       sx     sx    w           sy     sy    h)
-                #_(and (<= 0 sx) (< sx w) (<= 0 sy) (< sy h))
-                (let [soffset (* 4 (+ sx (* w sy)))
-                      rs (+ 0 soffset)
-                      gs (+ 1 soffset)
-                      bs (+ 2 soffset)
-                      as (+ 3 soffset)
-                      rm (aget ct (+ 2 p))
-                      gm (aget ct (+ 3 p))
-                      bm (aget ct (+ 4 p))
-                      am (aget ct (+ 5 p))]
-                  (aset ddata rd (+ (/ (* rm (aget sdata rs)) divisor) (aget ddata rd)))
-                  (aset ddata gd (+ (/ (* gm (aget sdata gs)) divisor) (aget ddata gd)))
-                  (aset ddata bd (+ (/ (* bm (aget sdata bs)) divisor) (aget ddata bd)))
-                  (aset ddata ad (+ (/ (* am (aget sdata as)) divisor) (aget ddata ad)))))))
-          (aset ddata rd (+ offset (aget ddata rd)))
-          (aset ddata gd (+ offset (aget ddata gd)))
-          (aset ddata bd (+ offset (aget ddata bd)))
-          (aset ddata ad (+ offset (aget ddata ad))))))
+        (let [dest (* 4 (+ dx (* w dy)))]
+          (loop [p 0 r-acc 0 g-acc 0 b-acc 0 a-acc 0]
+            #_(when (= dy 5) (.log js/console p r-acc))
+            (if (< p ct-count)
+              (let [sx (+ dx (aget ct p))
+                    sy (+ dy (aget ct (inc p)))]
+                ; For some reason ClojureScript insists on creating an anon fn
+                ; for the `and` block so inline the js for performance and
+                ; ^boolean type hint to prevent call to cljs.core.truth_.
+                (when ^boolean (js* "0 <= ~{} && ~{} < ~{} && 0 <= ~{} && ~{} < ~{}"
+                                           sx     sx    w           sy     sy    h)
+                  (let [src (* 4 (+ sx (* w sy)))]
+                    (recur (+ p 6)
+                           (+ r-acc (* (aget ct (+ 2 p)) (aget sdata (+ 0 src))))
+                           (+ g-acc (* (aget ct (+ 3 p)) (aget sdata (+ 1 src))))
+                           (+ g-acc (* (aget ct (+ 4 p)) (aget sdata (+ 2 src))))
+                           (+ a-acc (* (aget ct (+ 5 p)) (aget sdata (+ 3 src))))))))
+              (do (aset ddata (+ 0 dest) (+ offset (/ r-acc divisor)))
+                  (aset ddata (+ 1 dest) (+ offset (/ g-acc divisor)))
+                  (aset ddata (+ 2 dest) (+ offset (/ b-acc divisor)))
+                  (aset ddata (+ 3 dest) (+ offset (/ a-acc divisor)))))))))
+    (.log js/console dimg)
     dimg))
 
 (defn crop
