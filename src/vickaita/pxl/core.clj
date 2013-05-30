@@ -16,4 +16,4 @@
 
 (defn go!
   []
-  (serve #'app {:open-browser? false :auto-relaod? true}))
+  (serve #'app {:open-browser? false :auto-reload? true}))
