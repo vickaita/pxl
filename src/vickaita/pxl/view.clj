@@ -11,15 +11,13 @@
      (include-js "/js/main.js")]
     [:body
      [:div.tray
-      [:div#ui
-       [:header#logo [:h1 "pxl"]]
-       [:hr]
+      [:div.ui
+       [:header.logo [:h1 "pxl"]]
        [:input#file-picker-input {:type "file"}]
-       [:select#tools
-        [:option "-- Tools --"]]
+       [:select#tools [:option "-- Tools --"]]
        [:table
         [:thead [:tr [:th "Parent"] [:th "Data"]]]
         [:tfoot]
         [:tbody#graph]]]
-      [:div.container
+      [:div.easel
        [:canvas#main-canvas ""]]]]))

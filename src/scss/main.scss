@@ -1,31 +1,39 @@
 @import "compass/reset";
 
+$UI_WIDTH: 20rem;
+$UI_TAB_WIDTH: 1rem;
+
 body {
-	margin: 0;
-	padding: 0;
 	background: rgba(0, 0, 0, 0.5);
 }
 
+/*
 .tray {
 	position: relative;
-	left: -100px;
+	left: -15rem;
+	&.open { left: 0; }
 }
+*/
 
-#ui {
+.ui {
+	box-sizing: border-box;
+	width: $UI_WIDTH;
 	background: white;
 	border-radius: 1px;
 	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.3);
-	left: 0;
+	left: -1 * ($UI_WIDTH - $UI_TAB_WIDTH);
+	position: fixed;
 	line-height: 1.7;
 	margin: 0;
 	padding: 1.5rem;
-	position: fixed;
 	text-align: center;
 	text-transform: lower-case;
 	top: 0;
+	transition: left 200ms ease;
+	&.open, &:hover { left: 0; }
 }
 
-#logo h1 {
+.logo h1 {
 	font-family: monospace;
 	font-size: 2em;
 	line-height: 1.7;
@@ -33,12 +41,5 @@ body {
 	height: 3rem;
 }
 
-#file-picker {
-}
-
-#main {
-	display: block;
-}
-
-table {
+.easel {
 }
