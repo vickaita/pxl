@@ -49,19 +49,20 @@
       (set! (.-src img) (js/URL.createObjectURL file)))))
 
 (defn apply-tool
-  [e]
-  (when-let [op-name (.-value (evt/current-target e))]
-    (when-let [operation (tool-list op-name)]
-      (let [new-image (image-node (operation @current-image) @current-image)]
-        (reset! current-image new-image)
-        (swap! image-graph assoc (:id new-image) new-image)))))
+  [op-name]
+  (when-let [operation (tool-list op-name)]
+    (let [new-image (image-node (operation @current-image) @current-image)]
+      (reset! current-image new-image)
+      (swap! image-graph assoc (:id new-image) new-image))))
 
 (defn monitor-dom
   []
-  (let [fp-input (dom/by-id "file-picker-input")]
+  (let [tools (dom/by-class "tools")
+        fp-input (dom/by-id "file-picker-input")]
+    (evt/listen! tools "click"
+                 #(when-let [v (.-value (evt/target %))] (apply-tool v)))
     (evt/listen! fp-input "change"
                  #(load-image-from-file (aget fp-input "files" 0)))) 
-  (evt/listen! (dom/by-id "tools") :change apply-tool) 
   #_(evt/listen! :keydown #(.log js/console "keydown"))
   #_(evt/listen! :keyup #(.log js/console "keyup")))
 

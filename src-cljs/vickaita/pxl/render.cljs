@@ -17,12 +17,12 @@
 
 (defn prepare-tools
   [tool-list]
-  (let [tool-select (dom/by-id "tools")]
-    (doseq [tool tool-list]
+  (let [tool-select (dom/by-class "tools")]
+    (doseq [[tool _] tool-list]
       (dom/append!
         tool-select
         (dom/html-to-dom
-          (str "<option value=\"" (key tool) "\">" (key tool) "</option>"))))))
+          (str "<button value=\"" tool "\">" tool "</button>"))))))
 
 ;; Rendering
 
