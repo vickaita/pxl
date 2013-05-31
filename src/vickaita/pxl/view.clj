@@ -10,14 +10,16 @@
      (include-css "/css/main.css")
      (include-js "/js/main.js")]
     [:body
-     [:div#ui
-      [:header#logo [:h1 "pxl"]]
-      [:hr]
-      [:input#file-picker-input {:type "file"}]
-      [:select#tools
-       [:option "-- Tools --"]]
-      [:table
-       [:thead [:tr [:th "Parent"] [:th "Data"]]]
-       [:tfoot]
-       [:tbody#graph]]]
-     [:canvas#main-canvas ""]]))
+     [:div.tray
+      [:div#ui
+       [:header#logo [:h1 "pxl"]]
+       [:hr]
+       [:input#file-picker-input {:type "file"}]
+       [:select#tools
+        [:option "-- Tools --"]]
+       [:table
+        [:thead [:tr [:th "Parent"] [:th "Data"]]]
+        [:tfoot]
+        [:tbody#graph]]]
+      [:div.container
+       [:canvas#main-canvas ""]]]]))
