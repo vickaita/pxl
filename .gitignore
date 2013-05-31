@@ -12,4 +12,6 @@ pom.xml.asc
 .lein-failures
 .lein-plugins
 .lein-repl-history
+.sass-cache
 /resources/public/js/main.js
+/resources/public/css/main.css
