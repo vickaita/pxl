@@ -18,7 +18,6 @@
          [:button {:onclick "document.getElementById('file-picker-input').click()"} "Load Image"]
          [:input#file-picker-input {:type "file"
                                     :accept "image/*"}]]]
-       [:select#tools [:option "-- Tools --"]]
        [:table
         [:thead [:tr [:th "Parent"] [:th "Data"]]]
         [:tfoot]
