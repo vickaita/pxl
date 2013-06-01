@@ -8,6 +8,8 @@
             [vickaita.raster.core :as ras :refer [image-data]]
             [vickaita.raster.filters :as filt]))  
 
+(defn log [& msg] (.log js/console (apply str msg)))
+
 ;; Model
 
 (def ^{:doc "Holds the image-data for the currently displayed image."}
@@ -21,13 +23,32 @@
                      :nodes {}
                      :current nil}))
 
-(def tool-list
+(defn- open-file-picker
+  []
+  (log "open file picker")
+  (.click (first (dom/nodes (dom/by-class "file-picker-input"))))
+  nil)
+
+(defn load-image-from-file
+  [file]
+  (when file
+    (let [img (js/Image.)]
+      (set! (.-onload img) #(let [node (image-node (image-data img))]
+                              (reset! current-image node)
+                              (swap! image-graph assoc (:id node) node)
+                              (set! (.-onload img) nil)))
+      (set! (.-src img) (js/URL.createObjectURL file)))))
+
+(def tool-map
   (sorted-map
-    "Invert" filt/invert
-    "Blur" filt/blur
-    "Desaturate" filt/desaturate
-    "Sobel" filt/sobel
-    "Sharpen" filt/sharpen))
+    "LoadImage" {:text "Load an Image" :icon "" :fn (fn [img]
+                                                      (log "open file picker event handler")
+                                                      (open-file-picker))}
+    "Invert" {:text "Invert" :icon "" :fn filt/invert}
+    "Blur" {:text "Blur" :icon "" :fn filt/blur}
+    "Desaturate" {:text "Desaturate" :icon "" :fn filt/desaturate}
+    "Sobel" {:text "Sobel (broken)" :icon "" :fn filt/sobel}
+    "Sharpen" {:text "Sharpen" :icon "" :fn filt/sharpen}))
 
 ;; View
 
@@ -38,38 +59,41 @@
 
 ;; Controller
 
-(defn load-image-from-file
-  [file]
-  (when file
-    (let [img (js/Image.)]
-      (set! (.-onload img) #(let [node (image-node (image-data img))]
-                              (swap! image-graph assoc (:id node) node)
-                              (reset! current-image node)
-                              (set! (.-onload img) nil)))
-      (set! (.-src img) (js/URL.createObjectURL file)))))
-
 (defn apply-tool
-  [op-name]
-  (when-let [operation (tool-list op-name)]
-    (let [new-image (image-node (operation @current-image) @current-image)]
-      (reset! current-image new-image)
-      (swap! image-graph assoc (:id new-image) new-image))))
+  [tool-id]
+  (log "apply tool")
+  (when-let [operation (tool-map tool-id)]
+    (log "a")
+    (log operation)
+    (when-let [image ((:fn operation) @current-image)]
+      (log "b")
+      (let [node (image-node image @current-image)]
+        (log "c")
+        (reset! current-image node)
+        (swap! image-graph assoc (:id node) node)))))
 
 (defn monitor-dom
   []
-  (let [tools (dom/by-class "tools")
-        fp-input (dom/by-id "file-picker-input")]
-    (evt/listen! tools "click"
-                 #(when-let [v (.-value (evt/target %))] (apply-tool v)))
-    (evt/listen! fp-input "change"
-                 #(load-image-from-file (aget fp-input "files" 0)))) 
-  #_(evt/listen! :keydown #(.log js/console "keydown"))
-  #_(evt/listen! :keyup #(.log js/console "keyup")))
+  (let [file-picker (first (dom/nodes (dom/by-class "file-picker-input")))]
+    (evt/listen! file-picker :change
+                 (fn [e]
+                   (evt/prevent-default e)
+                   (evt/stop-propagation e)
+                   (log "change in file picker input")
+                   (load-image-from-file (aget file-picker "files" 0))))) 
+  (evt/listen! (dom/by-class "tools") :click
+               (fn [e]
+                 (evt/prevent-default e)
+                 (evt/stop-propagation e)
+                 (when-let [tool-id (dom/attr (evt/target e) :id)]
+                   (apply-tool tool-id))))
+  #_(evt/listen! :keydown #(log "keydown"))
+  #_(evt/listen! :keyup #(log "keyup")))
 
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (render/prepare-tools tool-list)
+  (render/prepare-tools tool-map)
   (monitor-models)
   (monitor-dom))
 

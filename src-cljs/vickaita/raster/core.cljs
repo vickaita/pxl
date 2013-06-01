@@ -92,7 +92,7 @@
       (.drawImage ctx this 0 0 w h)
       (.-data (.getImageData ctx 0 0 w h))))
 
-  cljs.core/ObjMap
+  PersistentArrayMap
   (width [this] (get this :width 0))
   (height [this] (get this :height 0))
   (data [this] (get this :data (js/Uint8ClampedArray.)))
@@ -134,7 +134,7 @@
           h (.-height canvas)]
       (.getImageData ctx 0 0 w h)))
 
-  cljs.core/ObjMap
+  PersistentArrayMap
   (-image-data [{:keys [width height data]}]
     (when (and width height data)
       (let [blank (image-data width height)]

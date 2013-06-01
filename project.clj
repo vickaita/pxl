@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 ;[org.clojure/clojurescript "0.0-1586"]
+                 [org.clojure/clojurescript "0.0-1806"]
                  [com.cemerick/clojurescript.test "0.0.3"]
                  [clj-aws-s3 "0.3.3"]
                  [ring "1.1.8"]
@@ -16,7 +16,7 @@
                  [domina "1.0.2-SNAPSHOT"]
                  [shoreleave "0.3.0"]
                  [shoreleave/shoreleave-remote-ring "0.3.0"]]
-  :plugins  [[lein-cljsbuild "0.3.0"]
+  :plugins  [[lein-cljsbuild "0.3.2"]
              [lein-ring "0.8.2"]]
   :cljsbuild {:builds
               [{:source-paths ["src-cljs"]

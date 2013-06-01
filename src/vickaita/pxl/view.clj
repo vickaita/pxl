@@ -13,11 +13,8 @@
      [:div.tray
       [:div.ui
        [:header.logo [:h1 "pxl"]]
-       [:ul.tools
-        [:li.tool
-         [:button {:onclick "document.getElementById('file-picker-input').click()"} "Load Image"]
-         [:input#file-picker-input {:type "file"
-                                    :accept "image/*"}]]]
+       [:input.file-picker-input {:type "file" :accept "image/*"}]  
+       [:ul.tools]
        [:table
         [:thead [:tr [:th "Parent"] [:th "Data"]]]
         [:tfoot]

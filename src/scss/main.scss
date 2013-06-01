@@ -48,6 +48,13 @@ body {
 }
 
 .tool {
+	border: 1px solid blue;
 }
 
-#file-picker-input { display: none; }	
+.tool a {
+	padding: 0;
+	margin: 0;
+	border-radius: 0;
+}
+
+.file-picker-input { display: none; }	

@@ -16,13 +16,16 @@
 ;; Initialization
 
 (defn prepare-tools
-  [tool-list]
-  (let [tool-select (dom/by-class "tools")]
-    (doseq [[tool _] tool-list]
-      (dom/append!
-        tool-select
-        (dom/html-to-dom
-          (str "<button value=\"" tool "\">" tool "</button>"))))))
+  [tool-map]
+  (let [tool-list (dom/by-class "tools")]
+    (doseq [[id tool] tool-map]
+      (let [li (.createElement js/document "li")
+            a (.createElement js/document "a")]
+        (dom/set-attrs! li {:class "tool"})
+        (dom/set-attrs! a {:class "tool-link" :id id :href "#"})
+        (dom/set-text! a (:text tool))
+        (dom/append! li a)
+        (dom/append! tool-list li)))))
 
 ;; Rendering
 
