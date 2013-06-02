@@ -1,7 +1,8 @@
 (ns vickaita.pxl.render
   (:require [domina :as dom]
             [domina.events :as evt]
-            [vickaita.raster.core :as ras :refer [width height put-image]]))
+            [vickaita.raster.core :as ras :refer [make-canvas width height put-image]]
+            [clojure.walk :refer [walk]]))
 
 (defn benchmark
   [f k]
@@ -15,9 +16,12 @@
 
 ;; Initialization
 
-(defn prepare-tools
+(defn draw-tools
+  "Draw the tools in the UI. Clears out the tool list and iteratively redraws
+  all tools."
   [tool-map]
   (let [tool-list (dom/by-class "tools")]
+    (dom/destroy-children! tool-list)
     (doseq [[id tool] tool-map]
       (let [li (.createElement js/document "li")
             a (.createElement js/document "a")]
@@ -27,9 +31,8 @@
         (dom/append! li a)
         (dom/append! tool-list li)))))
 
-;; Rendering
-
 (defn redraw-main-canvas
+  "Draw the provided imate to the main canvas."
   [img]
   (put-image (dom/by-id "main-canvas") img))
 
@@ -49,33 +52,26 @@
                                             (/ w 2)))
                                   "px")))))
 
-(defn thumb
-  [img]
-  (dom/set-attrs! (.createElement js/document "img")
-                  {:src (ras/image-data->url (ras/scale img 40 40))
-                   :width 40
-                   :height 40}))
+(defn draw-node
+  [element node]
+  (let [canvas (make-canvas (width node) (height node))]
+    (put-image canvas node)
+    (dom/append! element canvas)))
 
 (defn draw-graph
-  [nodes]
-  (let [graph (dom/by-id "graph")]
-    (dom/destroy-children! graph)
-    (doseq [node (vals nodes)]
-      (let [p (thumb (get nodes (:parent node)))
-            n (thumb node)
-            d (.createElement js/document "div")]
-      (dom/append! d [p n])
-      (dom/append! graph d)))))
+  [graph]
+  (let [element (dom/by-id "graph")
+        heads (:heads graph)
+        current (:current graph)
+        nodes (:nodes graph)]
+    (dom/destroy-children! element)
+    (loop [tier heads]
+      (when (not (empty? tier))
+        (let [row (.createElement js/document "div")]
+          (doseq [node tier] (draw-node row node))
+          (dom/append! element row))
+        (recur (set (remove nil? (map #(get nodes (:parent %)) tier))))))))
 
 ;; Event handlers
 
-(defn handle-image-change
-  [_ _ _ node]
-  (when node
-    (resize-main-canvas (width node) (height node))
-    (redraw-main-canvas node)))
-
-(defn handle-graph-change
-  [_ _ _ nodes]
-  (draw-graph nodes))
-
+(defn handle-graph-change [_ _ _ n] (draw-graph n))

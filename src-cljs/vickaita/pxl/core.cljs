@@ -18,10 +18,20 @@
 (def ^{:doc "The graph holding all mutations on the images."}
   image-graph (atom {}))
 
-#_(def ^{:doc "The graph holding all mutations on the images."}
-  image-graph (atom {:heads #{}
-                     :nodes {}
-                     :current nil}))
+(def ^{:doc "The graph holding all mutations on the images."}
+  graph (atom {:heads #{}
+               :nodes {}
+               :current nil}))
+
+(defn add-node
+  "Add node `n` to graph `g`."
+  [g n]
+  (-> g
+      (update-in [:heads] #(conj (disj % (:parent n)) n))
+      (update-in [:nodes] assoc (:id n) n)
+      (assoc-in [:current] n)))
+
+;; ---
 
 (defn- open-file-picker
   []
@@ -33,10 +43,8 @@
   [file]
   (when file
     (let [img (js/Image.)]
-      (set! (.-onload img) #(let [node (image-node (image-data img))]
-                              (reset! current-image node)
-                              (swap! image-graph assoc (:id node) node)
-                              (set! (.-onload img) nil)))
+      (set! (.-onload img) #(do (swap! graph add-node (image-node (image-data img)))
+                                (set! (.-onload img) nil)))
       (set! (.-src img) (js/URL.createObjectURL file)))))
 
 (def tool-map
@@ -54,23 +62,15 @@
 
 (defn monitor-models
   []
-  (add-watch current-image :image-change render/handle-image-change)
-  (add-watch image-graph :graph-change render/handle-graph-change))
+  (add-watch graph :graph-change render/handle-graph-change))
 
 ;; Controller
 
 (defn apply-tool
   [tool-id]
-  (log "apply tool")
   (when-let [operation (tool-map tool-id)]
-    (log "a")
-    (log operation)
-    (when-let [image ((:fn operation) @current-image)]
-      (log "b")
-      (let [node (image-node image @current-image)]
-        (log "c")
-        (reset! current-image node)
-        (swap! image-graph assoc (:id node) node)))))
+    (when-let [image ((:fn operation) (:current @graph))]
+      (swap! graph add-node (image-node image (:current @graph))))))
 
 (defn monitor-dom
   []
@@ -93,7 +93,7 @@
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (render/prepare-tools tool-map)
+  (render/draw-tools tool-map)
   (monitor-models)
   (monitor-dom))
 

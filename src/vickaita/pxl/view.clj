@@ -14,10 +14,6 @@
       [:div.ui
        [:header.logo [:h1 "pxl"]]
        [:input.file-picker-input {:type "file" :accept "image/*"}]  
-       [:ul.tools]
-       [:table
-        [:thead [:tr [:th "Parent"] [:th "Data"]]]
-        [:tfoot]
-        [:tbody#graph]]]
-      [:div.easel
+       [:ul.tools]]
+      [:div#graph
        [:canvas#main-canvas ""]]]]))
