@@ -1,6 +1,6 @@
 @import "compass/reset";
 
-$UI_WIDTH: 20rem;
+$UI_WIDTH: 10rem;
 $UI_TAB_WIDTH: 1rem;
 
 body {
@@ -26,8 +26,6 @@ body {
 	line-height: 1.7;
 	margin: 0;
 	padding: 1.5rem;
-	text-align: center;
-	text-transform: lower-case;
 	top: 0;
 	transition: left 200ms ease;
 	&.open, &:hover { left: 0; }
@@ -48,13 +46,24 @@ body {
 }
 
 .tool {
-	border: 1px solid blue;
+	border: 0.1rem solid green;
+	border-top: none;
+	&:first-child {
+		border-top: 0.1rem solid green;
+	}
 }
 
-.tool a {
-	padding: 0;
-	margin: 0;
+.tool-link {
 	border-radius: 0;
+	display: block;
+	font-family: monospace;
+	font-size: 0.8rem;
+	margin: 0;
+	padding: 0.25rem;
+	text-decoration: none;
+	&:hover {
+		cursor: pointer;
+	}
 }
 
 .file-picker-input { display: none; }	
