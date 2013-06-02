@@ -14,9 +14,7 @@
       (.log js/console (str "Method " k "took " delta "ms to complete."))
       result)))
 
-;; Initialization
-
-(defn draw-tools
+(defn draw-tools!
   "Draw the tools in the UI. Clears out the tool list and iteratively redraws
   all tools."
   [tool-map]
@@ -31,34 +29,15 @@
         (dom/append! li a)
         (dom/append! tool-list li)))))
 
-(defn redraw-main-canvas
-  "Draw the provided imate to the main canvas."
-  [img]
-  (put-image (dom/by-id "main-canvas") img))
-
-(defn resize-main-canvas
-  "Resize the canvas and recenter it as well."
-  [w h]
-  (when-let [cnv (dom/by-id "main-canvas")]
-    (doto cnv
-      (.setAttribute "width" w)
-      (.setAttribute "height" h)
-      (.setAttribute "style" (str "margin-top:"
-                                  (max 0 (- (/ (.-innerHeight js/window) 2)
-                                            (/ h 2)))
-                                  "px;"
-                                  "margin-left:"
-                                  (max 0 (- (/ (.-innerWidth js/window) 2)
-                                            (/ w 2)))
-                                  "px")))))
-
-(defn draw-node
-  [element node]
+(defn draw-node!
+  [element node is-current]
   (let [canvas (make-canvas (width node) (height node))]
     (put-image canvas node)
+    (dom/set-attrs! canvas {:id (:id node)
+                            :class (str "image-node" (when is-current " current"))})
     (dom/append! element canvas)))
 
-(defn draw-graph
+(defn draw-graph!
   [graph]
   (let [element (dom/by-id "graph")
         heads (:heads graph)
@@ -68,10 +47,6 @@
     (loop [tier heads]
       (when (not (empty? tier))
         (let [row (.createElement js/document "div")]
-          (doseq [node tier] (draw-node row node))
+          (doseq [node tier] (draw-node! row node (= node current)))
           (dom/append! element row))
         (recur (set (remove nil? (map #(get nodes (:parent %)) tier))))))))
-
-;; Event handlers
-
-(defn handle-graph-change [_ _ _ n] (draw-graph n))

@@ -50,9 +50,8 @@
 
 (def tool-map
   (sorted-map
-    "LoadImage" {:text "Load an Image" :icon "" :fn (fn [img]
-                                                      (log "open file picker event handler")
-                                                      (open-file-picker))}
+    ;;"LoadImage" (Tool. "Load an Image" "/tool.png" (fn [_] (open-file-picker)))
+    "LoadImage" {:text "Load an Image" :icon "" :fn (fn [_] (open-file-picker))}
     "Invert" {:text "Invert" :icon "" :fn filt/invert}
     "Blur" {:text "Blur" :icon "" :fn filt/blur}
     "Desaturate" {:text "Desaturate" :icon "" :fn filt/desaturate}
@@ -63,7 +62,7 @@
 
 (defn monitor-models
   []
-  (add-watch graph :graph-change render/handle-graph-change))
+  (add-watch graph :graph-change (fn [_ _ _ g] (render/draw-graph! g))))
 
 ;; Controller
 
@@ -88,13 +87,21 @@
                  (evt/stop-propagation e)
                  (when-let [tool-id (dom/attr (evt/target e) :id)]
                    (apply-tool tool-id))))
+  (evt/listen! (dom/by-id "graph") :click
+               (fn [e]
+                 (evt/prevent-default e)
+                 (evt/stop-propagation e)
+                 (let [element (evt/target e)]
+                   (when (dom/has-class? element "image-node")
+                     (when-let [node (get (:nodes @graph) (dom/attr element :id))]
+                       (swap! graph assoc-in [:current] node))))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (render/draw-tools tool-map)
+  (render/draw-tools! tool-map)
   (monitor-models)
   (monitor-dom))
 

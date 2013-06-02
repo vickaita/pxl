@@ -67,3 +67,8 @@ body {
 }
 
 .file-picker-input { display: none; }	
+
+.image-node {
+	border: 2px solid blue;
+	&.current { border: 2px solid red; }
+}
