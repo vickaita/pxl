@@ -26,8 +26,9 @@
 (defn add-node
   "Add node `n` to graph `g`."
   [g n]
+  (log (count (:heads g)))
   (-> g
-      (update-in [:heads] #(conj (disj % (:parent n)) n))
+      (update-in [:heads] #(conj (disj % (get (:nodes g) (:parent n))) n))
       (update-in [:nodes] assoc (:id n) n)
       (assoc-in [:current] n)))
 
