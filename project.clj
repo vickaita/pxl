@@ -14,6 +14,7 @@
                  [com.novemberain/monger "1.4.1"]
                  [hiccup "1.0.1"]
                  [domina "1.0.2-SNAPSHOT"]
+                 ;[prismatic/dommy "0.1.1"]
                  [shoreleave "0.3.0"]
                  [shoreleave/shoreleave-remote-ring "0.3.0"]]
   :plugins  [[lein-cljsbuild "0.3.2"]

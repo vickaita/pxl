@@ -16,13 +16,13 @@ body {
 */
 
 .ui {
+	-webkit-transform: scale(1);
 	box-sizing: border-box;
 	width: $UI_WIDTH;
 	background: white;
 	border-radius: 1px;
 	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.3);
 	left: -1 * ($UI_WIDTH - $UI_TAB_WIDTH);
-	position: fixed;
 	line-height: 1.7;
 	margin: 0;
 	padding: 1.5rem;
@@ -39,7 +39,16 @@ body {
 	height: 3rem;
 }
 
-.easel {
+#graph {
+	margin-left: 2rem;
+	.row {
+		border: 1px solid green;
+		padding: 1rem;
+		//height: 7rem;
+		&.current {
+			height: auto;
+		}
+	}
 }
 
 .tools {
@@ -70,5 +79,9 @@ body {
 
 .image-node {
 	border: 2px solid blue;
-	&.current { border: 2px solid red; }
+	-webkit-transform: scale(0.5);
+	&.current {
+		border: 2px solid red;
+		-webkit-transform: scale(1);
+	}
 }

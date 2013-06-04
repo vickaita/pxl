@@ -7,7 +7,9 @@
 
 (defn image-node
   ([data] (image-node data nil))
-  ([data parent] {:parent (or (:id parent) (guid))
+  ([data parent] {:parent (if parent
+                            (or (:id parent) (guid))
+                            :root)
                   :id (guid)
                   :width (raster/width data)
                   :height (raster/height data)

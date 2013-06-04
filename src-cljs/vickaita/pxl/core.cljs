@@ -26,7 +26,6 @@
 (defn add-node
   "Add node `n` to graph `g`."
   [g n]
-  (log (count (:heads g)))
   (-> g
       (update-in [:heads] #(conj (disj % (get (:nodes g) (:parent n))) n))
       (update-in [:nodes] assoc (:id n) n)
@@ -36,7 +35,6 @@
 
 (defn- open-file-picker
   []
-  (log "open file picker")
   (.click (first (dom/nodes (dom/by-class "file-picker-input"))))
   nil)
 
@@ -79,7 +77,6 @@
                  (fn [e]
                    (evt/prevent-default e)
                    (evt/stop-propagation e)
-                   (log "change in file picker input")
                    (load-image-from-file (aget file-picker "files" 0))))) 
   (evt/listen! (dom/by-class "tools") :click
                (fn [e]

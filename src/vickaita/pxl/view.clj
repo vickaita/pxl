@@ -15,5 +15,4 @@
        [:header.logo [:h1 "pxl"]]
        [:input.file-picker-input {:type "file" :accept "image/*"}]  
        [:ul.tools]]
-      [:div#graph
-       [:canvas#main-canvas ""]]]]))
+      [:div#graph]]]))
