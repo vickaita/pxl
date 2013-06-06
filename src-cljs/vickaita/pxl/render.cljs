@@ -63,6 +63,10 @@
   [current index element node children]
   (when node
     (let [div (.createElement js/document "div")]
+      (dom/set-attrs! div {:class "graph"
+                           :id (str "graph-of-" (if (keyword? node)
+                                                     (name node)
+                                                     (:id node)))})
       (draw-node! div node (= node current))
       (dom/prepend! element div)   
       (doseq [child children]

@@ -7,13 +7,8 @@ body {
 	background: rgba(0, 0, 0, 0.5);
 }
 
-/*
 .tray {
-	position: relative;
-	left: -15rem;
-	&.open { left: 0; }
 }
-*/
 
 .ui {
 	-webkit-transform: scale(1);
@@ -40,14 +35,22 @@ body {
 }
 
 #graph {
-	margin-left: 2rem;
+	padding: 1rem;
+	overflow:visible;
 	.row {
 		border: 1px solid green;
 		padding: 1rem;
-		//height: 7rem;
 		&.current {
 			height: auto;
 		}
+	}
+}
+
+.graph {
+	float: left;
+	.image-node {
+		display: block;
+		clear: both;
 	}
 }
 
