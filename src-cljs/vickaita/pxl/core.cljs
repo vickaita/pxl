@@ -13,7 +13,8 @@
 (def empty-app
   {:graph {:nodes {} 
            :heads #{}
-           :roots #{}}
+           :roots #{}
+           :selected #{}}
    :workspace {}
    :tools {}
    :settings {:graph-visible true
@@ -63,7 +64,7 @@
 
 (defn apply-tranform
   [tool-id]
-  (when-let [tool (tool-map tool-id)]
+  (when-let [tool (get-in @app-state [:tools tool-id])]
     (when-let [image ((:transform tool) (:workspace @app-state))]
       (let [old-node (:workspace @app-state)
             new-node (image-node image old-node)]
@@ -116,9 +117,9 @@
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (render/draw-tools! tool-map)
   (monitor-models)
-  (monitor-dom))
+  (monitor-dom)
+  (swap! app-state assoc :tools tool-map))
 
 ;; Kickoff the main function once the page loads
 (evt/listen! js/document "DOMContentLoaded" main)

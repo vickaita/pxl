@@ -45,6 +45,7 @@
 
 (defn draw-app!
   [app]
+  (draw-tools! (:tools app))
   (let [element (dom/by-id "graph")
         current (:workspace app)
         nodes (get-in app [:graph :nodes])
