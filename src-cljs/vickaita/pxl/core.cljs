@@ -54,12 +54,6 @@
    "t5" {:id "t5" :text "Sobel (broken)" :transform filt/sobel}
    "t6" {:id "t6" :text "Sharpen"        :transform filt/sharpen}})
 
-;; View
-
-(defn monitor-models
-  []
-  (add-watch app-state :app-change (fn [_ _ _ n] (render/draw-app! n))))
-
 ;; Controller
 
 (defn apply-tranform
@@ -88,6 +82,10 @@
 ; :parent-id "image-node-1" 
 ; :id "image-node-2"
 ; }
+
+(defn monitor-models
+  []
+  (add-watch app-state :app-change (fn [_ _ _ n] (render/draw-app! n))))
 
 (defn monitor-dom
   []
