@@ -1,14 +1,18 @@
 (ns vickaita.pxl.image-node
-  (:require [vickaita.raster.core :as raster]))
+  (:require [vickaita.raster.core :as raster]
+            [vickaita.pxl.util :refer [log]]))
 
-(def id-counter (atom 0))
+(def ^:private id-counter (atom 0))
 
 (defn- guid [] (str "image-node-" (swap! id-counter inc)))
+
+(defrecord ImageNode [parent id width height data tool])
 
 (defn image-node
   ([data] (image-node data nil))
   ([data parent] {:parent (if parent
-                            (or (:id parent) (guid))
+                            (or (:id parent) (do (log "no parent")
+                                                 (guid)))
                             :root)
                   :id (guid)
                   :width (raster/width data)

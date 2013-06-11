@@ -10,9 +10,8 @@
      (include-css "/css/main.css")
      (include-js "/js/main.js")]
     [:body
-     [:div.tray
-      [:div.ui
-       [:header.logo [:h1 "pxl"]]
-       [:input.file-picker-input {:type "file" :accept "image/*"}]  
-       [:ul.tools]]
-      [:div#graph]]]))
+     [:div.ui
+      [:header.logo [:h1 "pxl"]]
+      [:input.file-picker-input {:type "file" :accept "image/*"}]  
+      [:ul.tools]]
+     [:div#graph]]))

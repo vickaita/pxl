@@ -8,28 +8,27 @@
             [vickaita.raster.core :as ras :refer [image-data]]
             [vickaita.raster.filters :as filt]))  
 
-(defn log [& msg] (.log js/console (apply str msg)))
-
 ;; Model
 
-(def ^{:doc "Holds the image-data for the currently displayed image."}
-  current-image (atom nil))
-
-(def ^{:doc "The graph holding all mutations on the images."}
-  image-graph (atom {}))
-
-(def ^{:doc "The graph holding all mutations on the images."}
-  graph (atom {:heads #{}
-               :nodes {}
-               :current nil}))
+(def empty-app
+  {:graph {:nodes {} 
+           :heads #{}
+           :roots #{}}
+   :workspace {}
+   :tools {}
+   :settings {:graph-visible true
+              :tools-visible true}})
 
 (defn add-node
   "Add node `n` to graph `g`."
-  [g n]
-  (-> g
-      (update-in [:heads] #(conj (disj % (get (:nodes g) (:parent n))) n))
-      (update-in [:nodes] assoc (:id n) n)
-      (assoc-in [:current] n)))
+  [app node]
+  (-> app 
+      (update-in [:graph :heads] disj (:parent node))
+      (update-in [:graph :heads] conj (:id node))
+      (update-in [:graph :nodes] assoc (:id node) node)
+      (assoc-in [:workspace] node)))
+
+(def app-state (atom empty-app))
 
 ;; ---
 
@@ -42,33 +41,52 @@
   [file]
   (when file
     (let [img (js/Image.)]
-      (set! (.-onload img) #(do (swap! graph add-node (image-node (image-data img)))
+      (set! (.-onload img) #(do (swap! app-state add-node (image-node (image-data img)))
                                 (set! (.-onload img) nil)))
       (set! (.-src img) (js/URL.createObjectURL file)))))
 
 (def tool-map
-  (sorted-map
-    ;;"LoadImage" (Tool. "Load an Image" "/tool.png" (fn [_] (open-file-picker)))
-    "LoadImage" {:text "Load an Image" :icon "" :fn (fn [_] (open-file-picker))}
-    "Invert" {:text "Invert" :icon "" :fn filt/invert}
-    "Blur" {:text "Blur" :icon "" :fn filt/blur}
-    "Desaturate" {:text "Desaturate" :icon "" :fn filt/desaturate}
-    "Sobel" {:text "Sobel (broken)" :icon "" :fn filt/sobel}
-    "Sharpen" {:text "Sharpen" :icon "" :fn filt/sharpen}))
+  {"t1" {:id "t1" :text "Load an Image"  :transform (fn [_] (open-file-picker))}
+   "t2" {:id "t2" :text "Invert"         :transform filt/invert}
+   "t3" {:id "t3" :text "Blur"           :transform filt/blur}
+   "t4" {:id "t4" :text "Desaturate"     :transform filt/desaturate}
+   "t5" {:id "t5" :text "Sobel (broken)" :transform filt/sobel}
+   "t6" {:id "t6" :text "Sharpen"        :transform filt/sharpen}})
 
 ;; View
 
 (defn monitor-models
   []
-  (add-watch graph :graph-change (fn [_ _ _ g] (render/draw-graph! g))))
+  (add-watch app-state :app-change (fn [_ _ _ n] (render/draw-app! n))))
 
 ;; Controller
 
-(defn apply-tool
+(defn apply-tranform
   [tool-id]
-  (when-let [operation (tool-map tool-id)]
-    (when-let [image ((:fn operation) (:current @graph))]
-      (swap! graph add-node (image-node image (:current @graph))))))
+  (when-let [tool (tool-map tool-id)]
+    (when-let [image ((:transform tool) (:workspace @app-state))]
+      (let [old-node (:workspace @app-state)
+            new-node (image-node image old-node)]
+        (swap! app-state add-node new-node)))))
+
+(defn update-transform-parameters
+  [parameters]
+  (let [old-node (:workspace @app-state)
+        new-node (assoc old-node :parameters parameters)]
+    (swap! app-state assoc :workspace new-node)))
+
+;;; ImageNode
+;{
+; :transform curves
+; :parmeters [10 23 14]}
+; :width 1
+; :height 1
+; :data [0 0 0 0]
+; :hash "jifj9wjflksjfew"
+; :parent-hash "1g6312t3gasdfhenfin"
+; :parent-id "image-node-1" 
+; :id "image-node-2"
+; }
 
 (defn monitor-dom
   []
@@ -83,15 +101,15 @@
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
                  (when-let [tool-id (dom/attr (evt/target e) :id)]
-                   (apply-tool tool-id))))
+                   (apply-tranform tool-id))))
   (evt/listen! (dom/by-id "graph") :click
                (fn [e]
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
                  (let [element (evt/target e)]
                    (when (dom/has-class? element "image-node")
-                     (when-let [node (get (:nodes @graph) (dom/attr element :id))]
-                       (swap! graph assoc-in [:current] node))))))
+                     (when-let [node (get (get-in @app-state [:graph :nodes]) (dom/attr element :id))]
+                       (swap! app-state assoc-in [:graph :current] node))))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 
