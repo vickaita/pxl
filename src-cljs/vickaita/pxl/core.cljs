@@ -108,8 +108,8 @@
                  (evt/stop-propagation e)
                  (let [element (evt/target e)]
                    (when (dom/has-class? element "image-node")
-                     (when-let [node (get (get-in @app-state [:graph :nodes]) (dom/attr element :id))]
-                       (swap! app-state assoc-in [:graph :current] node))))))
+                     (when-let [node (get-in @app-state [:graph :nodes (dom/attr element :id)])]
+                       (swap! app-state assoc :workspace node))))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 
