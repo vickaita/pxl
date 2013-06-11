@@ -83,7 +83,7 @@
 ; :id "image-node-2"
 ; }
 
-(defn monitor-models
+(defn monitor-app
   []
   (add-watch app-state :app-change (fn [_ _ _ n] (render/draw-app! n))))
 
@@ -115,7 +115,7 @@
 (defn- main
   []
   (repl/connect "http://localhost:9201/repl")
-  (monitor-models)
+  (monitor-app)
   (monitor-dom)
   (swap! app-state assoc :tools tool-map))
 
