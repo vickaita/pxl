@@ -4,7 +4,7 @@
 
 (def ^:private id-counter (atom 0))
 
-(defn- guid [] (str "image-node-" (swap! id-counter inc)))
+(defn- next-id [] (str "image-node-" (swap! id-counter inc)))
 
 (defrecord ImageNode [parent id width height data tool])
 
@@ -27,7 +27,7 @@
   ([data] (image-node data nil {:id :root}))
   ([data tool parent]
    {:parent (:id parent)
-    :id (guid)
+    :id (next-id)
     :width (raster/width data)
     :height (raster/height data)
     :data (raster/data data)
