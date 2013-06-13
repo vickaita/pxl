@@ -13,5 +13,6 @@
      [:div.ui
       [:header.logo [:h1 "pxl"]]
       [:input.file-picker-input {:type "file" :accept "image/*"}]  
-      [:ul.tools]]
+      [:ul.tools]
+      [:form#control]]   
      [:div#graph]]))

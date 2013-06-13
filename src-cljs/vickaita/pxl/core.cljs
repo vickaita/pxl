@@ -3,6 +3,7 @@
             [domina.events :as evt]
             [goog.dom.ViewportSizeMonitor]
             [clojure.browser.repl :as repl]
+            [vickaita.pxl.util :refer [log]]
             [vickaita.pxl.render :as render]
             [vickaita.pxl.image-node :refer [image-node]]
             [vickaita.raster.core :as ras :refer [image-data]]
@@ -15,19 +16,30 @@
            :heads #{}
            :roots #{}
            :selected #{}}
-   :workspace {}
+   :current {}
    :tools {}
    :settings {:graph-visible true
               :tools-visible true}})
 
 (defn add-node
-  "Add node `n` to graph `g`."
+  "Add an image-node to app :graph"
   [app node]
   (-> app 
       (update-in [:graph :heads] disj (:parent node))
       (update-in [:graph :heads] conj (:id node))
-      (update-in [:graph :nodes] assoc (:id node) node)
-      (assoc-in [:workspace] node)))
+      (update-in [:graph :nodes] assoc (:id node) node)))
+
+(defn get-node
+  [app node-id]
+  (get-in app [:graph :nodes node-id]))
+
+(defn get-current
+  [app]
+  (get-in app [:graph :nodes (:current app)]))
+
+(defn set-current
+  [app node]
+  (assoc app :current (:id node)))
 
 (def app-state (atom empty-app))
 
@@ -42,46 +54,44 @@
   [file]
   (when file
     (let [img (js/Image.)]
-      (set! (.-onload img) #(do (swap! app-state add-node (image-node (image-data img)))
-                                (set! (.-onload img) nil)))
+      (set! (.-onload img) #(let [img-node (image-node (image-data img))]
+                              (swap! app-state add-node img-node)
+                              (swap! app-state set-current img-node)
+                              (set! (.-onload img) nil)))
       (set! (.-src img) (js/URL.createObjectURL file)))))
 
 (def tool-map
-  {"t1" {:id "t1" :text "Load an Image"  :transform (fn [_] (open-file-picker))}
-   "t2" {:id "t2" :text "Invert"         :transform filt/invert}
-   "t3" {:id "t3" :text "Blur"           :transform filt/blur}
-   "t4" {:id "t4" :text "Desaturate"     :transform filt/desaturate}
-   "t5" {:id "t5" :text "Sobel (broken)" :transform filt/sobel}
-   "t6" {:id "t6" :text "Sharpen"        :transform filt/sharpen}})
+  {"t1" {:id "t1" :text "Load an Image"  :transform (fn [_] (open-file-picker)) :control nil}
+   "t2" {:id "t2" :text "Invert"         :transform filt/invert     :control nil}
+   "t3" {:id "t3" :text "Blur"           :transform filt/blur       :control nil}
+   "t4" {:id "t4" :text "Desaturate"     :transform filt/desaturate :control nil}
+   ;"t5" {:id "t5" :text "Sobel (broken)" :transform filt/sobel      :control nil}
+   "t6" {:id "t6" :text "Sharpen"        :transform filt/sharpen    :control nil}
+   "t7" {:id "t7" :text "Brighten"       :transform filt/brighten   :control {:type :form
+                                                                              :inputs [{:type "range" :min 0 :max 255 :value 0}]}}})
 
 ;; Controller
 
 (defn apply-tranform
-  [tool-id]
+  [tool-id params]
   (when-let [tool (get-in @app-state [:tools tool-id])]
-    (when-let [image ((:transform tool) (:workspace @app-state))]
-      (let [old-node (:workspace @app-state)
-            new-node (image-node image old-node)]
-        (swap! app-state add-node new-node)))))
+    (when-let [image (apply (:transform tool) (conj params (get-current @app-state)))]
+      (let [old-node (get-current @app-state)
+            new-node (image-node image tool params old-node)]
+        (swap! app-state #(-> %
+                              (add-node new-node)
+                              (set-current new-node)))))))
 
 (defn update-transform-parameters
   [parameters]
-  (let [old-node (:workspace @app-state)
+  (let [old-node (get-current @app-state)
         new-node (assoc old-node :parameters parameters)]
-    (swap! app-state assoc :workspace new-node)))
+    (swap! app-state set-current new-node)))
 
-;;; ImageNode
-;{
-; :transform curves
-; :parmeters [10 23 14]}
-; :width 1
-; :height 1
-; :data [0 0 0 0]
-; :hash "jifj9wjflksjfew"
-; :parent-hash "1g6312t3gasdfhenfin"
-; :parent-id "image-node-1" 
-; :id "image-node-2"
-; }
+(defn gen-params
+  [form]
+  (let [inputs (.getElementsByTagName form "input")]
+    (for [input inputs] (.-value input))))
 
 (defn monitor-app
   []
@@ -100,7 +110,7 @@
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
                  (when-let [tool-id (dom/attr (evt/target e) :id)]
-                   (apply-tranform tool-id))))
+                   (apply-tranform tool-id (gen-params (dom/by-id "control"))))))
   (evt/listen! (dom/by-id "graph") :click
                (fn [e]
                  (evt/prevent-default e)
@@ -108,7 +118,12 @@
                  (let [element (evt/target e)]
                    (when (dom/has-class? element "image-node")
                      (when-let [node (get-in @app-state [:graph :nodes (dom/attr element :id)])]
-                       (swap! app-state assoc :workspace node))))))
+                       (swap! app-state set-current node))))))
+  (evt/listen! (dom/by-id "control") :change
+               (fn [e]
+                 (evt/prevent-default e)
+                 (evt/stop-propagation e)
+                 (update-transform-parameters (gen-params (evt/target e)))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 

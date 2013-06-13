@@ -22,8 +22,7 @@
 (defn draw-node!
   [element node is-current]
   (when node
-    (if (= :root (:id node))
-      nil
+    (when (not= :root (:id node))
       (let [canvas (make-canvas (width node) (height node))]
         (put-image canvas node)
         (dom/set-attrs! canvas {:id (:id node)
@@ -39,34 +38,27 @@
                                                      (name node)
                                                      (:id node)))})
       (draw-node! div node (= (:id node) (:id current)))
-      (dom/prepend! element div)   
+      (dom/prepend! element div)
       (doseq [child children]
         (draw-heirarchy! current index div child (get index (:id child)))))))
+
+(defn draw-control!
+  [control]
+  (let [element (dom/by-id "control")]
+    (when (= :form (:type control))
+      (dom/destroy-children! element)
+      (doseq [param (:inputs control)]
+        (let [input (.createElement js/document "input")]
+          (dom/set-attrs! input param)
+          (dom/append! element input))))))
 
 (defn draw-app!
   [app]
   (draw-tools! (:tools app))
+  (when-let [control (get-in app [:workspace :tool :control])]
+    (draw-control! control))
   (let [element (dom/by-id "graph")
-        current (:workspace app)
-        nodes (get-in app [:graph :nodes])
-        index (group-by :parent (vals nodes))]
+        current (get-in app [:graph :nodes (:current app)])
+        index (group-by :parent (vals (->> app :graph :nodes)))]
     (dom/destroy-children! element)
     (draw-heirarchy! current index element {:id :root} (get index :root))))
-
-#_(defn draw-graph!
-  [graph]
-  (let [element (dom/by-id "graph")
-        heads (:heads graph)
-        current (:current graph)
-        nodes (:nodes graph)]
-    (dom/destroy-children! element)
-    (loop [remaining (apply dissoc nodes (map :id heads))
-           tier heads]
-      (when (not (empty? tier))
-        (let [row (.createElement js/document "div")
-              next-heads (set (remove nil? (map #(get remaining (:parent %)) tier)))  ]
-          (dom/set-attr! row :class (str "row" (when (contains? tier current) " current")))
-          (doseq [node tier] (when node (draw-node! row node (= node current))))
-          (dom/append! element row)
-          (recur (apply dissoc remaining (map :id next-heads))
-                 next-heads))))))

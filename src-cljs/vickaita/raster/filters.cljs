@@ -47,3 +47,9 @@
   (c/convolve (no-alpha [1  1 1
                          1 -7 1
                          1  1 1]) 1 0 img))
+
+(defn brighten
+  ([img] (brighten 0 img))
+  ([amount img]
+  (dopixels [[r g b a] img]
+            [(+ r amount) (+ g amount) (+ b amount) a])))
