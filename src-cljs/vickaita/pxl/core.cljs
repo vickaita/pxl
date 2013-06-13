@@ -41,6 +41,8 @@
   [app node]
   (assoc app :current (:id node)))
 
+;; ---
+
 (def app-state (atom empty-app))
 
 ;; ---
@@ -88,7 +90,7 @@
         new-node (assoc old-node :parameters parameters)]
     (swap! app-state set-current new-node)))
 
-(defn gen-params
+(defn serialize-form
   [form]
   (let [inputs (.getElementsByTagName form "input")]
     (for [input inputs] (.-value input))))
@@ -110,7 +112,7 @@
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
                  (when-let [tool-id (dom/attr (evt/target e) :id)]
-                   (apply-tranform tool-id (gen-params (dom/by-id "control"))))))
+                   (apply-tranform tool-id (serialize-form (dom/by-id "control"))))))
   (evt/listen! (dom/by-id "graph") :click
                (fn [e]
                  (evt/prevent-default e)
@@ -123,7 +125,7 @@
                (fn [e]
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
-                 (update-transform-parameters (gen-params (evt/target e)))))
+                 (update-transform-parameters (serialize-form (evt/target e)))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 
