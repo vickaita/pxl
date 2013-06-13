@@ -45,18 +45,17 @@
 (defn draw-control!
   [control]
   (let [element (dom/by-id "control")]
-    (when (= :form (:type control))
-      (dom/destroy-children! element)
-      (doseq [param (:inputs control)]
-        (let [input (.createElement js/document "input")]
-          (dom/set-attrs! input param)
-          (dom/append! element input))))))
+    (dom/destroy-children! element)
+    (doseq [attrs control]
+      (let [input (.createElement js/document "input")]
+        (dom/set-attrs! input attrs)
+        (dom/append! element input)))))
 
 (defn draw-app!
   [app]
+  (js* "debugger")
   (draw-tools! (:tools app))
-  (when-let [control (get-in app [:workspace :tool :control])]
-    (draw-control! control))
+  (draw-control! (get-in app [:graph :nodes (:current app) :tool :control]))
   (let [element (dom/by-id "graph")
         current (get-in app [:graph :nodes (:current app)])
         index (group-by :parent (vals (->> app :graph :nodes)))]

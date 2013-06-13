@@ -69,26 +69,26 @@
    "t4" {:id "t4" :text "Desaturate"     :transform filt/desaturate :control nil}
    ;"t5" {:id "t5" :text "Sobel (broken)" :transform filt/sobel      :control nil}
    "t6" {:id "t6" :text "Sharpen"        :transform filt/sharpen    :control nil}
-   "t7" {:id "t7" :text "Brighten"       :transform filt/brighten   :control {:type :form
-                                                                              :inputs [{:type "range" :min 0 :max 255 :value 0}]}}})
+   "t7" {:id "t7" :text "Brighten"       :transform filt/brighten   :control [{:type "range" :min 0 :max 255 :value 0}]}})
 
 ;; Controller
 
 (defn apply-tranform
-  [tool-id params]
+  [tool-id]
   (when-let [tool (get-in @app-state [:tools tool-id])]
-    (when-let [image (apply (:transform tool) (conj params (get-current @app-state)))]
+    (when-let [image ((:transform tool) (get-current @app-state))]
       (let [old-node (get-current @app-state)
-            new-node (image-node image tool params old-node)]
+            new-node (image-node image tool old-node)]
         (swap! app-state #(-> %
                               (add-node new-node)
                               (set-current new-node)))))))
 
 (defn update-transform-parameters
   [parameters]
-  (let [old-node (get-current @app-state)
-        new-node (assoc old-node :parameters parameters)]
-    (swap! app-state set-current new-node)))
+  (let [current-node (get-current @app-state)
+        current-control (get-in current-node [:tool :control])
+        control (doall (map #(assoc %1 :value %2) current-control parameters))]
+    (swap! app-state assoc-in [:graph :nodes (:id current-node) :tool :control] control)))
 
 (defn serialize-form
   [form]
@@ -112,7 +112,7 @@
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
                  (when-let [tool-id (dom/attr (evt/target e) :id)]
-                   (apply-tranform tool-id (serialize-form (dom/by-id "control"))))))
+                   (apply-tranform tool-id))))
   (evt/listen! (dom/by-id "graph") :click
                (fn [e]
                  (evt/prevent-default e)
@@ -125,7 +125,8 @@
                (fn [e]
                  (evt/prevent-default e)
                  (evt/stop-propagation e)
-                 (update-transform-parameters (serialize-form (evt/target e)))))
+                 (let [params (serialize-form (evt/current-target e))]
+                   (update-transform-parameters params))))
   #_(evt/listen! :keydown #(log "keydown"))
   #_(evt/listen! :keyup #(log "keyup")))
 
@@ -138,3 +139,21 @@
 
 ;; Kickoff the main function once the page loads
 (evt/listen! js/document "DOMContentLoaded" main)
+
+(comment 
+
+  (get-in @app-state [:graph :nodes (:current @app-state) :tool :control])
+
+  (:current @app-state)
+
+  (:nodes (:graph @app-state))
+
+  (get-in @app-state [:graph :nodes (:current @app-state) ])
+
+  (serialize-form (.getElementById js/document "control"))
+
+  (map #(assoc % :value %2)
+       (get-in @app-state [:graph :nodes (:current @app-state) :tool :control])
+       '("15"))
+
+  )
