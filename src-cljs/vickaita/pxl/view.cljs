@@ -1,4 +1,4 @@
-(ns vickaita.pxl.render
+(ns vickaita.pxl.view
   (:require [domina :as dom]
             [domina.events :as evt]
             [vickaita.raster.core :as ras :refer [make-canvas width height put-image]]
@@ -52,12 +52,14 @@
         (dom/append! element input)))))
 
 (defn draw-app!
-  [app]
-  (js* "debugger")
-  (draw-tools! (:tools app))
-  (draw-control! (get-in app [:graph :nodes (:current app) :tool :control]))
-  (let [element (dom/by-id "graph")
-        current (get-in app [:graph :nodes (:current app)])
-        index (group-by :parent (vals (->> app :graph :nodes)))]
-    (dom/destroy-children! element)
-    (draw-heirarchy! current index element {:id :root} (get index :root))))
+  [_ _ old app]
+  (let [different-in? (fn [k] (not= (get-in old k) (get-in app k)))]
+    (when (different-in? [:tools]) (draw-tools! (:tools app)))
+    (when (different-in? [:graph :nodes (:current app) :tool :control])
+      (draw-control! (get-in app [:graph :nodes (:current app) :tool :control])))
+    (when (or (different-in? [:graph]) (different-in? [:current]))
+      (let [element (dom/by-id "graph")
+            current (get-in app [:graph :nodes (:current app)])
+            index (group-by :parent (vals (->> app :graph :nodes)))]
+        (dom/destroy-children! element)
+        (draw-heirarchy! current index element {:id :root} (get index :root))))))

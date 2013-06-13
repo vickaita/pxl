@@ -4,7 +4,7 @@
             [goog.dom.ViewportSizeMonitor]
             [clojure.browser.repl :as repl]
             [vickaita.pxl.util :refer [log]]
-            [vickaita.pxl.render :as render]
+            [vickaita.pxl.view :as view]
             [vickaita.pxl.image-node :refer [image-node]]
             [vickaita.raster.core :as ras :refer [image-data]]
             [vickaita.raster.filters :as filt]))  
@@ -97,7 +97,7 @@
 
 (defn monitor-app
   []
-  (add-watch app-state :app-change (fn [_ _ _ n] (render/draw-app! n))))
+  (add-watch app-state :app-change view/draw-app!))
 
 (defn monitor-dom
   []
