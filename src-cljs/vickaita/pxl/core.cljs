@@ -56,7 +56,7 @@
   [file]
   (when file
     (let [img (js/Image.)]
-      (set! (.-onload img) #(let [img-node (image-node (image-data img))]
+      (set! (.-onload img) #(let [img-node (image-node (image-data img) nil {:id :root})]
                               (swap! app-state add-node img-node)
                               (swap! app-state set-current img-node)
                               (set! (.-onload img) nil)))
@@ -87,13 +87,19 @@
   [parameters]
   (let [current-node (get-current @app-state)
         current-control (get-in current-node [:tool :control])
-        control (doall (map #(assoc %1 :value %2) current-control parameters))]
-    (swap! app-state assoc-in [:graph :nodes (:id current-node) :tool :control] control)))
+        control (doall (map #(assoc %1 :value %2) current-control parameters))
+        transform (get-in current-node [:tool :transform])
+        parent (get-in @app-state [:graph :nodes (:parent current-node)])
+        image (apply transform (conj parameters parent))
+        node (image-node image (assoc (:tool current-node) :control control) (get-in @app-state [:graph :nodes (:parent current-node)]))]
+    (swap! app-state #(-> %
+                          (add-node node)
+                          (set-current node)))))
 
 (defn serialize-form
   [form]
   (let [inputs (.getElementsByTagName form "input")]
-    (for [input inputs] (.-value input))))
+    (vec (for [input inputs] (.-value input)))))
 
 (defn monitor-app
   []
