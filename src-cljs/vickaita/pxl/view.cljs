@@ -55,7 +55,8 @@
   [_ _ old app]
   (let [different-in? (fn [k] (not= (get-in old k) (get-in app k)))]
     (when (different-in? [:tools]) (draw-tools! (:tools app)))
-    (when (different-in? [:graph :nodes (:current app) :tool :control])
+    (draw-control! (get-in app [:graph :nodes (:current app) :tool :control]))
+    #_(when (different-in? [:graph :nodes (:current app) :tool :control])
       (draw-control! (get-in app [:graph :nodes (:current app) :tool :control])))
     (when (or (different-in? [:graph]) (different-in? [:current]))
       (let [element (dom/by-id "graph")
