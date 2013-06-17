@@ -6,46 +6,11 @@
             [vickaita.pxl.util :refer [log]]
             [vickaita.pxl.view :as view]
             [vickaita.pxl.image-node :refer [image-node]]
+            [vickaita.pxl.app :refer [add-node set-current get-current empty-app]]
             [vickaita.raster.core :as ras :refer [image-data]]
             [vickaita.raster.filters :as filt]))  
 
-;; Model
-
-(def empty-app
-  {:graph {:nodes {} 
-           :heads #{}
-           :roots #{}
-           :selected #{}}
-   :current {}
-   :tools {}
-   :settings {:graph-visible true
-              :tools-visible true}})
-
-(defn add-node
-  "Add an image-node to app :graph"
-  [app node]
-  (-> app 
-      (update-in [:graph :heads] disj (:parent node))
-      (update-in [:graph :heads] conj (:id node))
-      (update-in [:graph :nodes] assoc (:id node) node)))
-
-(defn get-node
-  [app node-id]
-  (get-in app [:graph :nodes node-id]))
-
-(defn get-current
-  [app]
-  (get-in app [:graph :nodes (:current app)]))
-
-(defn set-current
-  [app node]
-  (assoc app :current (:id node)))
-
-;; ---
-
 (def app-state (atom empty-app))
-
-;; ---
 
 (defn- open-file-picker
   []
