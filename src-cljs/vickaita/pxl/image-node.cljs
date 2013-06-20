@@ -25,3 +25,10 @@
      :tool tool
      :parameters []
      :unprocessed-regions [[0 0 w h]]}))
+
+(defn merge-image-data
+  [node image]
+  (-> node
+      (assoc :width (width image))
+      (assoc :height (height image))
+      (assoc :data (data image))))

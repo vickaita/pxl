@@ -1,5 +1,5 @@
 (ns vickaita.pxl.app
-  (:require [vickaita.pxl.image-node :refer [image-node]]
+  (:require [vickaita.pxl.image-node :as n :refer [image-node]]
             [vickaita.raster.core :refer [image-data width height data]]
             [vickaita.pxl.util :refer [log]]))
 
@@ -46,17 +46,10 @@
       (add-node node)
       (set-current node)))
 
-(defn merge-image-data
-  [node image]
-  (-> node
-      (assoc :width (width image))
-      (assoc :height (height image))
-      (assoc :data (data image))))
-
 (defn render-job
   [node]
   (fn [app write-fn]
-    (let [write (comp write-fn (partial merge-image-data node))
+    (let [write (comp write-fn (partial n/merge-image-data node))
           transform (get-in node [:tool :transform])
           source-node (get-node app (:parent-id node))
           args (conj (get node :parameters []) source-node write)
