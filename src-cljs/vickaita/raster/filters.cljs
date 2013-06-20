@@ -49,8 +49,8 @@
                          1  1 1]) 1 0 img))
 
 (defn brighten
-  ([img] (brighten 0 img))
-  ([amount img]
+  ([img write] (brighten 0 img write))
+  ([amount img write]
    (let [amt (js/parseInt amount 10)]
      (dopixels [[r g b a] img]
                [(+ r amt) (+ g amt) (+ b amt) a]))))

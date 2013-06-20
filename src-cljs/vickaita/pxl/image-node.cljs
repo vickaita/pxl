@@ -23,4 +23,5 @@
      :height h
      :data (data img-data)
      :tool tool
+     :parameters []
      :unprocessed-regions [[0 0 w h]]}))

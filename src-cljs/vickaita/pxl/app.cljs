@@ -46,10 +46,6 @@
       (add-node node)
       (set-current node)))
 
-(defn add-render-job
-  [app job]
-  (update-in app [:render-jobs] conj job))
-
 (defn merge-image-data
   [node image]
   (-> node
@@ -63,9 +59,13 @@
     (let [write (comp write-fn (partial merge-image-data node))
           transform (get-in node [:tool :transform])
           source-node (get-node app (:parent-id node))
-          args (conj [] source-node write)
+          args (conj (get node :parameters []) source-node write)
           image (apply transform args)]
       (write image))))
+
+(defn add-render-job
+  [app node]
+  (update-in app [:render-jobs] conj (render-job node)))
 
 (defn transform
   [app tool-id]
@@ -74,17 +74,12 @@
           node (image-node (image-data nil) tool parent)]
       (-> app
           (add-current node)
-          (add-render-job (render-job node))))))
+          (add-render-job node)))))
 
 (defn update-transform-parameters
   [app parameters]
-  (let [current-node (get-current app)
-        current-control (get-in current-node [:tool :control])
-        control (doall (map #(assoc %1 :value %2) current-control parameters))
-        transform (get-in current-node [:tool :transform])
-        parent (get-in app [:graph :nodes (:parent-id current-node)])
-        image (apply transform (conj parameters parent))
-        node (image-node image (assoc (:tool current-node) :control control) (get-in app [:graph :nodes (:parent-id current-node)]))]
+  (let [node (assoc (get-current app) :parameters parameters)
+        parent (get-node app (:parent-id node))]
     (-> app
-        (add-node node)
-        (set-current node))))
+        (add-current node)
+        (add-render-job node))))
