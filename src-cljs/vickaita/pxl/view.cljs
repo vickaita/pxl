@@ -2,6 +2,7 @@
   (:require [domina :as dom]
             [domina.events :as evt]
             [vickaita.raster.core :as ras :refer [make-canvas width height put-image]]
+            [vickaita.pxl.util :refer [log]]
             [clojure.walk :refer [walk]]))
 
 (defn draw-tools!
@@ -22,8 +23,9 @@
 (defn draw-node!
   [element node is-current]
   (when node
-    (when (not= :root (:id node))
-      (let [canvas (make-canvas (width node) (height node))]
+    (when (and (not= :root (:id node)) (ras/drawable? (ras/image-data node)))
+      (let [img (ras/image-data node)
+            canvas (make-canvas (width img) (height img))]
         (put-image canvas node)
         (dom/set-attrs! canvas {:id (:id node)
                                 :class (str "image-node" (when is-current " current"))})
@@ -34,9 +36,7 @@
   (when node
     (let [div (.createElement js/document "div")]
       (dom/set-attrs! div {:class "graph"
-                           :id (str "graph-of-" (if (keyword? node)
-                                                     (name node)
-                                                     (:id node)))})
+                           :id (str "graph-of-" (name (:id node)))})
       (draw-node! div node (= (:id node) (:id current)))
       (dom/prepend! element div)
       (doseq [child children]
@@ -58,9 +58,9 @@
     (draw-control! (get-in app [:graph :nodes (:current app) :tool :control]))
     #_(when (different-in? [:graph :nodes (:current app) :tool :control])
       (draw-control! (get-in app [:graph :nodes (:current app) :tool :control])))
-    (when (or (different-in? [:graph]) (different-in? [:current]))
+    (when (or true (different-in? [:graph]) (different-in? [:current]))
       (let [element (dom/by-id "graph")
             current (get-in app [:graph :nodes (:current app)])
-            index (group-by :parent (vals (->> app :graph :nodes)))]
+            index (group-by :parent-id (vals (->> app :graph :nodes)))]
         (dom/destroy-children! element)
         (draw-heirarchy! current index element {:id :root} (get index :root))))))

@@ -73,6 +73,11 @@
                   (image-data img)
                   sx sy sw sh dx dy dw dh)))
 
+(defn drawable?
+  [i]
+  (and (< 0 (width i))
+       (< 0 (height i))
+       (< 0 (alength (data i)))))
 
 ;; Protocol Implementations
 
@@ -91,6 +96,16 @@
           ctx (get-context w h)]
       (.drawImage ctx this 0 0 w h)
       (.-data (.getImageData ctx 0 0 w h))))
+
+  ObjMap
+  (width [this] (get this :width 0))
+  (height [this] (get this :height 0))
+  (data [this] (get this :data (js/Uint8ClampedArray.)))
+
+  PersistentHashMap
+  (width [this] (get this :width 0))
+  (height [this] (get this :height 0))
+  (data [this] (get this :data (js/Uint8ClampedArray.)))
 
   PersistentArrayMap
   (width [this] (get this :width 0))
@@ -134,15 +149,29 @@
           h (.-height canvas)]
       (.getImageData ctx 0 0 w h)))
 
+  ObjMap
+  (-image-data [{:keys [width height data]}]
+    (when (and (> width 0) (> height 0) data)
+      (let [blank (image-data width height)]
+        (.set (.-data blank) (pixel-array data))
+        blank)))
+
+  PersistentHashMap
+  (-image-data [{:keys [width height data]}]
+    (when (and (> width 0) (> height 0) data)
+      (let [blank (image-data width height)]
+        (.set (.-data blank) (pixel-array data))
+        blank)))
+
   PersistentArrayMap
   (-image-data [{:keys [width height data]}]
-    (when (and width height data)
+    (when (and (> width 0) (> height 0) data)
       (let [blank (image-data width height)]
         (.set (.-data blank) (pixel-array data))
         blank)))
 
   nil
-  (-image-data [_] (-image-data {:width 0 :height 0 :data []}))
+  (-image-data [_] nil #_(-image-data {:width 0 :height 0 :data []}))
   )
 
 (extend-protocol Pixel
