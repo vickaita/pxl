@@ -78,8 +78,10 @@
 
 (defn update-transform-parameters
   [app parameters]
-  (let [node (assoc (get-current app) :parameters parameters)
-        parent (get-node app (:parent-id node))]
+  (let [cur-node (get-current app)
+        tool (:tool cur-node)
+        parent (get-node app (:parent-id cur-node)) 
+        node (assoc (image-node cur-node tool parent) :parameters parameters)]
     (-> app
         (add-current node)
         (add-render-job node))))
