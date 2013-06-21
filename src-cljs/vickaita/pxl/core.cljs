@@ -12,7 +12,7 @@
 
 (def app-state (atom app/empty-app))
 
-(defn- open-file-picker
+(defn- load-image
   [_ write-image-data]
   (let [file-picker (first (dom/nodes (dom/by-class "file-picker-input")))
         file-picker-wrap (first (dom/nodes (dom/by-class "file-picker-wrap")))]
@@ -40,7 +40,7 @@
     (vec (for [input inputs] (.-value input)))))
 
 (def tool-map
-  {"t1" {:id "t1" :text "Load an Image"  :transform open-file-picker :control nil}
+  {"t1" {:id "t1" :text "Load an Image"  :transform load-image :control nil}
    "t2" {:id "t2" :text "Invert"         :transform filt/invert      :control nil}
    "t3" {:id "t3" :text "Blur"           :transform filt/blur        :control nil}
    "t4" {:id "t4" :text "Desaturate"     :transform filt/desaturate  :control nil}
