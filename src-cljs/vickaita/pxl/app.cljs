@@ -48,14 +48,14 @@
 
 (defn render-job
   [node]
-  (fn [app write-fn]
-    (let [write (comp write-fn (partial n/merge-image-data node))
+  (fn [read-node write-node]
+    (let [write-image (comp write-node (partial n/merge-image-data node))
           transform (get-in node [:tool :transform])
-          source-node (get-node app (:parent-id node))
+          source-node (read-node (:parent-id node))
           params (vec (map :value (-> node :tool :control)))
-          args (conj params source-node write)
+          args (conj params source-node write-image)
           image (apply transform args)]
-      (write image))))
+      (write-image image))))
 
 (defn add-render-job
   [app node]
