@@ -52,7 +52,8 @@
     (let [write (comp write-fn (partial n/merge-image-data node))
           transform (get-in node [:tool :transform])
           source-node (get-node app (:parent-id node))
-          args (conj (get node :parameters []) source-node write)
+          params (vec (map :value (-> node :tool :control)))
+          args (conj params source-node write)
           image (apply transform args)]
       (write image))))
 
@@ -73,8 +74,9 @@
   [app parameters]
   (let [cur-node (get-current app)
         tool (:tool cur-node)
+        control (vec (map #(assoc %1 :value %2) (:control tool) parameters))
         parent (get-node app (:parent-id cur-node)) 
-        node (assoc (image-node cur-node tool parent) :parameters parameters)]
+        node (image-node cur-node (assoc tool :control control) parent)]
     (-> app
         (add-current node)
         (add-render-job node))))
