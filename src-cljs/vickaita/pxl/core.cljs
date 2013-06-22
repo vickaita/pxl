@@ -82,10 +82,11 @@
   (let [[job & jobs] (:render-jobs @app-state)]
     (if job
       (do (swap! app-state assoc :render-jobs jobs)
-          (job (partial app/get-node @app-state)
-               (fn [node]
-                 (swap! app-state app/set-node node)
-                 (js/setTimeout monitor-jobs 0))))
+          ((:function job)
+           (partial app/get-node @app-state)
+           (fn [node]
+             (swap! app-state app/set-node node)
+             (js/setTimeout monitor-jobs 0))))
       (js/setTimeout monitor-jobs 100))))
 
 (defn- main
