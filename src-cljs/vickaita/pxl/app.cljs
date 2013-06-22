@@ -47,10 +47,10 @@
       (set-current node)))
 
 (defn render-job
-  [node]
+  [node region]
   {:parent-node-id (:parent-id node)
    :node-id (:id node)
-   :region [0 0 (width node) (height node)]
+   :region region
    :function
    (fn [read-node write-node]
      (let [write-image (comp write-node (partial n/merge-image-data node))
@@ -63,7 +63,7 @@
 
 (defn add-render-job
   [app node]
-  (update-in app [:render-jobs] conj (render-job node)))
+  (update-in app [:render-jobs] conj (render-job node [0 0 (width node) (height node)])))
 
 (defn transform
   [app tool-id]
