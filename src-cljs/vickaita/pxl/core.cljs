@@ -13,7 +13,7 @@
 (def app-state (atom app/empty-app))
 
 (defn- load-image
-  [_ _ _ _ write-image-data]
+  [_ _ _ _ _ write-image-data]
   (let [file-picker (first (dom/nodes (dom/by-class "file-picker-input")))
         file-picker-wrap (first (dom/nodes (dom/by-class "file-picker-wrap")))]
     (evt/listen-once!
@@ -83,7 +83,7 @@
           ((:function job)
            (fn [node-id] (app/get-node @app-state node-id))
            (fn [node]
-             (log :done)
+             (log (:region job))
              (swap! app-state app/set-node node)
              (js/setTimeout monitor-jobs 1000))))
       (js/setTimeout monitor-jobs 1000))))

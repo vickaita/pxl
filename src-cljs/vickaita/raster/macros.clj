@@ -7,7 +7,7 @@
        (= 4 (count expr))))
 
 (defmacro dopix
-  [dst-data region bindings body]
+  [dst-data region row-size bindings body]
   (let [form (first bindings)
         src-data (second bindings)
         has-let (and (> (count bindings) 2) (= :let (nth bindings 2)))
@@ -15,7 +15,7 @@
     `(let [[x# y# w# h#] ~region]
        (loop [row# y#]
          (loop [col# x#]
-           (let [row-offset# (* row# w# 4)
+           (let [row-offset# (* row# ~row-size 4)
                  r# (+ row-offset# (* col# 4))
                  g# (+ r# 1)
                  b# (+ r# 2)

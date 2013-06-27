@@ -4,8 +4,8 @@
             [vickaita.raster.geometry :refer [surround]]))
 
 (defn invert
-  [params src region dst write]
-  (let [result (dopix dst region
+  [params src region row-size dst write]
+  (let [result (dopix dst region row-size
                       [[r g b a] src]
                       [(- 255 r) (- 255 g) (- 255 b) a])]
     (write result)))

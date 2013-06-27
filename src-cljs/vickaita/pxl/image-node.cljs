@@ -55,7 +55,7 @@
            transform (get-in node [:tool :transform])
            parent-node (read-node (:parent-id node))
            params (vec (map :value (-> node :tool :control)))]
-       (transform params (data parent-node) region (data node) write-image)))})
+       (transform params (data parent-node) region (width node) (data node) write-image)))})
 
 (merge-image-data {:width 10 :height 20 :data nil} {:data :foo})
 
