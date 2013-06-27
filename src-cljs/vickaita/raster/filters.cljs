@@ -10,11 +10,6 @@
                       [(- 255 r) (- 255 g) (- 255 b) a])]
     (write result)))
 
-;(defn invert
-;  [img]
-;  (dopixels [[r g b a] img]
-;            [(- 255 r) (- 255 g) (- 255 b) a]))
-
 (defn desaturate
   [img]
   (dopixels [[r g b a] img
