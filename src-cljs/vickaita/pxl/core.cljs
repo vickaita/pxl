@@ -83,9 +83,9 @@
           ((:function job)
            (fn [node-id] (app/get-node @app-state node-id))
            (fn [node]
-             (log (:region job))
+             #_(log (:region job))
              (swap! app-state app/set-node node)
-             (js/setTimeout monitor-jobs 1000))))
+             (js/setTimeout monitor-jobs 0))))
       (js/setTimeout monitor-jobs 1000))))
 
 (defn- main

@@ -12,9 +12,9 @@
         src-data (second bindings)
         has-let (and (> (count bindings) 2) (= :let (nth bindings 2)))
         let-bindings (if has-let (nth bindings 3) [])]
-    `(let [[x# y# w# h#] ~region]
-       (loop [row# y#]
-         (loop [col# x#]
+    `(let [[x1# y1# x2# y2#] ~region]
+       (loop [row# y1#]
+         (loop [col# x1#]
            (let [row-offset# (* row# ~row-size 4)
                  r# (+ row-offset# (* col# 4))
                  g# (+ r# 1)
@@ -29,8 +29,8 @@
                (aset ~dst-data g# ~(nth body 1))
                (aset ~dst-data b# ~(nth body 2))
                (aset ~dst-data a# ~(nth body 3)))
-             (when (< col# (+ x# w#)) (recur (inc col#)))))
-         (when (< row# (+ y# h#)) (recur (inc row#))))
+             (when (< col# x2#) (recur (inc col#)))))
+         (when (< row# y2#) (recur (inc row#))))
        {:data ~dst-data})))
 
 (defmacro dopixels

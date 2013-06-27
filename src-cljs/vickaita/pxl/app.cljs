@@ -50,11 +50,11 @@
   [[min-x min-y w h]]
   (if (or (= w 0) (= h 0))
     [[0 0 0 0]]
-    (let [step 100
+    (let [step 10
           max-x (+ min-x w)
           max-y (+ min-y h)]
       (for [x (range min-x max-x step) y (range min-y max-y step)]
-        [x y (dec (Math/min max-x (+ step x))) (dec (Math/min max-y (+ step y)))]))))
+        [x y (Math/min max-x (+ step x)) (Math/min max-y (+ step y))]))))
 
 (defn add-render-job
   [app node]
