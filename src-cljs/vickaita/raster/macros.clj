@@ -29,8 +29,8 @@
                (aset ~dst-data g# ~(nth body 1))
                (aset ~dst-data b# ~(nth body 2))
                (aset ~dst-data a# ~(nth body 3)))
-             (when (< col# w#) (recur (inc col#)))))
-         (when (< row# h#) (recur (inc row#))))
+             (when (< col# (+ x# w#)) (recur (inc col#)))))
+         (when (< row# (+ y# h#)) (recur (inc row#))))
        {:data ~dst-data})))
 
 (defmacro dopixels
