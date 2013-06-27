@@ -13,7 +13,7 @@
 (def app-state (atom app/empty-app))
 
 (defn- load-image
-  [_ write-image-data]
+  [_ _ _ _ write-image-data]
   (let [file-picker (first (dom/nodes (dom/by-class "file-picker-input")))
         file-picker-wrap (first (dom/nodes (dom/by-class "file-picker-wrap")))]
     (evt/listen-once!
@@ -28,9 +28,7 @@
                   #(do (write-image-data (image-data img))
                        (set! (.-onload img) nil)))
             (set! (.-src img) (js/URL.createObjectURL file))))))
-    (dom/remove-class! file-picker-wrap "hidden"))
-  ;; TODO: do something better here
-  (image-data {:width 0 :height 0 :data nil}))
+    (dom/remove-class! file-picker-wrap "hidden")))
 
 #_(log (get-in @app-state [:graph :nodes]))
 
@@ -83,11 +81,12 @@
     (if job
       (do (swap! app-state assoc :render-jobs jobs)
           ((:function job)
-           (partial app/get-node @app-state)
+           (fn [node-id] (app/get-node @app-state node-id))
            (fn [node]
+             (log :done)
              (swap! app-state app/set-node node)
-             (js/setTimeout monitor-jobs 0))))
-      (js/setTimeout monitor-jobs 100))))
+             (js/setTimeout monitor-jobs 1000))))
+      (js/setTimeout monitor-jobs 1000))))
 
 (defn- main
   []

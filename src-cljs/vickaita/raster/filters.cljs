@@ -1,12 +1,19 @@
 (ns vickaita.raster.filters
-  (:require-macros [vickaita.raster.macros :refer [dopixels]])
+  (:require-macros [vickaita.raster.macros :refer [dopixels dopix]])
   (:require [vickaita.raster.core :as c :refer [image-data width height data]]
             [vickaita.raster.geometry :refer [surround]]))
 
 (defn invert
-  [img]
-  (dopixels [[r g b a] img]
-            [(- 255 r) (- 255 g) (- 255 b) a]))
+  [params src region dst write]
+  (let [result (dopix dst region
+                      [[r g b a] src]
+                      [(- 255 r) (- 255 g) (- 255 b) a])]
+    (write result)))
+
+;(defn invert
+;  [img]
+;  (dopixels [[r g b a] img]
+;            [(- 255 r) (- 255 g) (- 255 b) a]))
 
 (defn desaturate
   [img]

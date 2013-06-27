@@ -391,3 +391,35 @@
     (let [can (make-canvas (width img) (height img))]
       (put-image can img)
       (.toDataURL can))))
+
+
+
+
+(defn dopix!*
+  [src-data dst-data x y w h]
+  (let [n (* (- w x) (- h y))]
+    (loop [r-off 0 g-off 1 b-off 2 a-off 3]
+      (let [r-val (aget src-data r-off)
+            g-val (aget src-data g-off)
+            b-val (aget src-data b-off)
+            a-val (aget src-data a-off)]
+        (aset dst-data r-off r-val)
+        (aset dst-data g-off g-val)
+        (aset dst-data b-off b-val)
+        (aset dst-data a-off a-val))
+      (when (> n a-off)
+        (recur (+ 4 r-off) (+ 4 g-off) (+ 4 b-off) (+ 4 a-off))))))
+
+
+
+
+;   let [form (first bindings)
+;        src-img (second bindings)
+;        has-let (and (> (count bindings) 2) (= :let (nth bindings 2)))
+;        let-bindings (if has-let (nth bindings 3) [])]
+;    ` let [w# (vickaita.raster.core/width ~src-img)
+;           h# (vickaita.raster.core/height ~src-img)
+;           src-data# (vickaita.raster.core/data ~src-img)
+;           dst-img# (vickaita.raster.core/image-data w# h#)
+;           dst-data# (vickaita.raster.core/data dst-img#)
+;           n# (alength dst-data#)]

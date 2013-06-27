@@ -6,6 +6,33 @@
   (and (vector? expr)
        (= 4 (count expr))))
 
+(defmacro dopix
+  [dst-data region bindings body]
+  (let [form (first bindings)
+        src-data (second bindings)
+        has-let (and (> (count bindings) 2) (= :let (nth bindings 2)))
+        let-bindings (if has-let (nth bindings 3) [])]
+    `(let [[x# y# w# h#] ~region]
+       (loop [row# y#]
+         (loop [col# x#]
+           (let [row-offset# (* row# w# 4)
+                 r# (+ row-offset# (* col# 4))
+                 g# (+ r# 1)
+                 b# (+ r# 2)
+                 a# (+ r# 3)]
+             (let [~(nth form 0) (aget ~src-data r#)
+                   ~(nth form 1) (aget ~src-data g#)
+                   ~(nth form 2) (aget ~src-data b#)
+                   ~(nth form 3) (aget ~src-data a#)
+                   ~@let-bindings]
+               (aset ~dst-data r# ~(nth body 0))
+               (aset ~dst-data g# ~(nth body 1))
+               (aset ~dst-data b# ~(nth body 2))
+               (aset ~dst-data a# ~(nth body 3)))
+             (when (< col# w#) (recur (inc col#)))))
+         (when (< row# h#) (recur (inc row#))))
+       {:data ~dst-data})))
+
 (defmacro dopixels
   [bindings body]
   (let [form (first bindings)

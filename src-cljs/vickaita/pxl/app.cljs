@@ -1,5 +1,5 @@
 (ns vickaita.pxl.app
-  (:require [vickaita.pxl.image-node :as n :refer [image-node]]
+  (:require [vickaita.pxl.image-node :as n :refer [image-node render-job]]
             [vickaita.raster.core :refer [image-data width height data]]
             [vickaita.pxl.util :refer [log]]))
 
@@ -34,7 +34,7 @@
 
 (defn get-current
   [app]
-  (get-in app [:graph :nodes (:current app)]))
+  (get-in app [:graph :nodes (:current app)] {:id :root :width 0 :height 0 :data nil}))
 
 (defn set-current
   [app node]
@@ -46,30 +46,27 @@
       (add-node node)
       (set-current node)))
 
-(defn render-job
-  [node region]
-  {:parent-node-id (:parent-id node)
-   :node-id (:id node)
-   :region region
-   :function
-   (fn [read-node write-node]
-     (let [write-image (comp write-node (partial n/merge-image-data node))
-           transform (get-in node [:tool :transform])
-           parent-node (read-node (:parent-id node))
-           params (vec (map :value (-> node :tool :control)))
-           args (conj params parent-node write-image)
-           image (apply transform args)]
-       (write-image image)))})
+(defn subdivide
+  [[min-x min-y w h]]
+  (if (or (= w 0) (= h 0))
+    [[0 0 0 0]]
+    (let [step 50
+          max-x (+ min-x w)
+          max-y (+ min-y h)]
+      (for [x (range min-x max-x step) y (range min-y max-y step)]
+        [x y (Math/min max-x (+ step x)) (Math/min max-y (+ step y))]))))
 
 (defn add-render-job
   [app node]
-  (update-in app [:render-jobs] conj (render-job node [0 0 (width node) (height node)])))
+  (let [w (width node)
+        h (height node)]
+    (update-in app [:render-jobs] concat
+               (map (partial render-job node) (subdivide [0 0 w h])))))
 
 (defn transform
   [app tool-id]
   (when-let [tool (get-in app [:tools tool-id])]
-    (let [parent (or (get-current app) {:id :root})
-          node (image-node (image-data nil) tool parent)]
+    (let [node (n/create-child (get-current app) tool)]
       (-> app
           (add-current node)
           (add-render-job node)))))

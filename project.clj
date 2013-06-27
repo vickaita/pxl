@@ -24,6 +24,7 @@
                 :id "dev"
                 :compiler {:pretty-print true
                            :output-to "resources/public/js/main.js"
+                           ;:source-map "resources/public/js/main.map"  
                            :optimizations :whitespace}}
                {:source-paths ["src-cljs"]
                 :id "prod"
