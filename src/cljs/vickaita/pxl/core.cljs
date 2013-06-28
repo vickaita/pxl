@@ -77,15 +77,18 @@
 
 (defn monitor-jobs
   []
-  (let [[job & jobs] (:render-jobs @app-state)]
+  (let [[job & jobs] (:render-jobs @app-state)
+        start (.now js/Date)]
     (if job
       (do (swap! app-state assoc :render-jobs jobs)
           ((:function job)
            (fn [node-id] (app/get-node @app-state node-id))
            (fn [node]
+             (log "to call:" (- (.now js/Date) start))
              #_(log (:region job))
              (swap! app-state app/set-node node)
-             (js/setTimeout monitor-jobs 0))))
+             (js/setTimeout monitor-jobs 0)
+             (log "to done:" (- (.now js/Date) start)))))
       (js/setTimeout monitor-jobs 1000))))
 
 (defn- main

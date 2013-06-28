@@ -19,14 +19,15 @@
                  [shoreleave/shoreleave-remote-ring "0.3.0"]]
   :plugins  [[lein-cljsbuild "0.3.2"]
              [lein-ring "0.8.2"]]
+  :source-paths ["src/clj"]
   :cljsbuild {:builds
-              [{:source-paths ["src-cljs"]
+              [{:source-paths ["src/cljs"]
                 :id "dev"
                 :compiler {:pretty-print true
                            :output-to "resources/public/js/main.js"
                            ;:source-map "resources/public/js/main.map"  
                            :optimizations :whitespace}}
-               {:source-paths ["src-cljs"]
+               {:source-paths ["src/cljs"]
                 :id "prod"
                 :compiler {:pretty-print false
                            :output-to "resources/public/js/main.js"
