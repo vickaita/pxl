@@ -14,4 +14,5 @@ pom.xml.asc
 .lein-repl-history
 .sass-cache
 /resources/public/js/main.js
+/resources/public/js/main.map
 /resources/public/css/main.css
