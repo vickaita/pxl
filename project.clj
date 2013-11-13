@@ -19,23 +19,21 @@
                  ;[prismatic/dommy "0.1.1"]
                  [shoreleave "0.3.0"]
                  [shoreleave/shoreleave-remote-ring "0.3.0"]]
-  :plugins  [[lein-cljsbuild "0.3.2"]
+  :plugins  [[lein-cljsbuild "1.0.0-alpha2"]
              [lein-ring "0.8.2"]]
   :source-paths ["src/clj"]
   :cljsbuild {:repl-listen-port 9201 
               :builds
               [{:id "dev"
                 :source-paths ["src/cljs"]
-                :compiler {:output-to "main.js"
-                           :output-dir "resources/public/js/"
+                :compiler {:output-to "resources/public/js/main.js"
+                           :source-map "resources/public/js/main.js.map"
                            :pretty-print true
-                           :source-map true
-                           :optimizations :none}}
+                           :optimizations :whitespace}}
                {:id "prod"
                 :source-paths ["src/cljs"]
                 :compiler {:pretty-print false
                            :output-to "main.js"
-                           :output-dir "resources/public/js/"
+                           :output-dir "resources/public/js/prod/"
                            :optimizations :advanced}}]}
   :ring {:handler vickaita.pxl.core/app})
-
