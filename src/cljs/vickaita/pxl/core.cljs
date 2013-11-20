@@ -1,14 +1,15 @@
 (ns vickaita.pxl.core
-  (:require [domina :as dom]
+  (:require [cljs.core.async :refer [put! chan >! <!]]
+            [domina :as dom]
             [domina.events :as evt]
             [goog.dom.ViewportSizeMonitor]
             [clojure.browser.repl :as repl]
             [vickaita.pxl.util :refer [log]]
             [vickaita.pxl.view :as view]
             [vickaita.pxl.image-node :refer [image-node]]
-            [vickaita.pxl.app :as app]
+            [vickaita.pxl.app :as app :refer [get-node set-node]]
             [vickaita.raster.core :as ras :refer [image-data width height data]]
-            [vickaita.raster.filters :as filt]))  
+            [vickaita.raster.filters :as filt]))
 
 (def app-state (atom app/empty-app))
 
@@ -21,16 +22,14 @@
       (fn [e]
         (evt/prevent-default e)
         (evt/stop-propagation e)
-        (dom/add-class! file-picker-wrap "hidden") 
-        (when-let [file (aget file-picker "files" 0)]    
+        (dom/add-class! file-picker-wrap "hidden")
+        (when-let [file (aget file-picker "files" 0)]
           (let [img (js/Image.)]
             (set! (.-onload img)
                   #(do (write-image-data (image-data img))
                        (set! (.-onload img) nil)))
             (set! (.-src img) (js/URL.createObjectURL file))))))
     (dom/remove-class! file-picker-wrap "hidden")))
-
-#_(log (get-in @app-state [:graph :nodes]))
 
 (defn serialize-form
   [form]
@@ -79,17 +78,28 @@
   []
   (let [[job & jobs] (:render-jobs @app-state)
         start (.now js/Date)]
-    (if job
+    (if-not job
+      (js/setTimeout monitor-jobs 1000)
       (do (swap! app-state assoc :render-jobs jobs)
           ((:function job)
-           (fn [node-id] (app/get-node @app-state node-id))
+           (fn [node-id] (get-node @app-state node-id))
            (fn [node]
-             (log "to call:" (- (.now js/Date) start))
-             #_(log (:region job))
-             (swap! app-state app/set-node node)
              (js/setTimeout monitor-jobs 0)
-             (log "to done:" (- (.now js/Date) start)))))
-      (js/setTimeout monitor-jobs 1000))))
+             (swap! app-state set-node node)))))))
+
+(defn process-job
+  [job]
+  (let [as @app-state]
+  (swap! app-state set-node
+         ((:function job)
+          (get-node as (:node-id job))
+          (get-node as (:parent-node-id job))))))
+
+(defn monitor-jobs*
+  []
+  (let [jobs (app/job-channel @app-state)]
+    (go (while true
+          (process-job (<! jobs))))))
 
 (defn- main
   []

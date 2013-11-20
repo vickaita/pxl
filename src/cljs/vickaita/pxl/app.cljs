@@ -1,5 +1,6 @@
 (ns vickaita.pxl.app
-  (:require [vickaita.pxl.image-node :as n :refer [image-node render-job]]
+  (:require [cljs.core.async :refer [put! chan >! <!]]
+            [vickaita.pxl.image-node :as n :refer [image-node render-job]]
             [vickaita.raster.core :refer [image-data width height data]]
             [vickaita.pxl.util :refer [log]]))
 
@@ -81,3 +82,16 @@
     (-> app
         (add-current node)
         (add-render-job node))))
+
+(defn job-channel
+  [app]
+  (let [c (chan)])
+  (add-watch app :job-channel
+             (fn [k r o n]
+                                
+                                ))
+  )
+
+(defn process-job
+  [job]
+  (.log js/console "yo"))

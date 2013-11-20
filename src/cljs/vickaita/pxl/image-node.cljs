@@ -44,25 +44,24 @@
       (image-node (image-data w h) tool node)   
       (image-node {:width w :height h :data nil} tool node))))
 
+;; (defn render-job
+;;   [node region]
+;;   {:parent-node-id (:parent-id node)
+;;    :node-id (:id node)
+;;    :region region
+;;    :function (fn [read-node write-node]
+;;      (let [write-image (comp write-node (partial merge-image-data node))
+;;            transform (get-in node [:tool :transform])
+;;            parent-node (read-node (:parent-id node))
+;;            params (vec (map :value (-> node :tool :control)))]
+;;        (transform params (data parent-node) region (width node) (data node) write-image)))})
+
 (defn render-job
   [node region]
   {:parent-node-id (:parent-id node)
    :node-id (:id node)
    :region region
-   :function
-   (fn [read-node write-node]
-     (let [write-image (comp write-node (partial merge-image-data node))
-           transform (get-in node [:tool :transform])
-           parent-node (read-node (:parent-id node))
+   :function (fn [node parent-node]
+     (let [transform (get-in node [:tool :transform])
            params (vec (map :value (-> node :tool :control)))]
        (transform params (data parent-node) region (width node) (data node) write-image)))})
-
-(merge-image-data {:width 10 :height 20 :data nil} {:data :foo})
-
-(comment
-
-  (def a (image-node (image-data 10 10)))
-  
-  (def b (create-child a nil))
-  
-  )
